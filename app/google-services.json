@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "928327322299",
+    "firebase_url": "https://welnessfusion-default-rtdb.firebaseio.com",
+    "project_id": "welnessfusion",
+    "storage_bucket": "welnessfusion.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:928327322299:android:0855090182d973af56b79e",
+        "android_client_info": {
+          "package_name": "com.example.wellnessfusion2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCCRiJcAy2voDgGin52zSJewXSgc7OWBEQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:928327322299:android:bfabc69e43bf425556b79e",
+        "android_client_info": {
+          "package_name": "com.example.wellnessfusionapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCCRiJcAy2voDgGin52zSJewXSgc7OWBEQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
