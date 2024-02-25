@@ -57,6 +57,8 @@ android {
 
 dependencies {
 
+    implementation ("io.coil-kt:coil-compose:2.5.0")
+    implementation ("com.google.dagger:hilt-android:2.38.1")
     implementation ("com.google.firebase:firebase-firestore-ktx:latest_version")
     implementation("androidx.compose.ui:ui:1.6.1")
     // Use the latest version
@@ -77,6 +79,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.room:room-ktx:2.6.1")
     implementation("androidx.test.espresso:espresso-web:3.5.1")
+    implementation("com.google.firebase:firebase-database-ktx:20.3.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")

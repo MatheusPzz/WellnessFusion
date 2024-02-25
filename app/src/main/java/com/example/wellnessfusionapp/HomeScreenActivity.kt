@@ -37,6 +37,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.wellnessfusionapp.Navigation.BottomNavBar
+import com.example.wellnessfusionapp.Navigation.MainTopBar
 import com.example.wellnessfusionapp.ViewModels.CategoryViewModel
 import kotlinx.coroutines.launch
 
@@ -164,7 +166,7 @@ private fun QuickWorkoutPlan(navController: NavController) {
                     .padding(12.dp)
                     .width(165.dp)
                     .height(140.dp),
-                onClick = { navController.navigate("physicalCategory") },
+                onClick = { navController.navigate("zenCategory") },
                 shape = RoundedCornerShape(10.dp)
             )
             {

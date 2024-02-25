@@ -19,12 +19,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.wellnessfusionapp.Models.UserProfile
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun LoginScreen(navController: NavController, onLoginSuccess: () -> Unit) {
+fun LoginScreen(navController: NavController, onSuccess: () -> Unit) {
     val auth = FirebaseAuth.getInstance()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -83,11 +85,6 @@ fun LoginScreen(navController: NavController, onLoginSuccess: () -> Unit) {
                 }
             }
             Spacer(modifier = Modifier.height(30.dp))
-            if (errorMessage.isNotEmpty()) {
-                Text(text = errorMessage, color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier
-                        .padding(10.dp)
-                )
 
             }
             // Add some space before the fields
@@ -120,13 +117,27 @@ fun LoginScreen(navController: NavController, onLoginSuccess: () -> Unit) {
                             auth,
                             email,
                             password,
-                            onLoginSuccess
-                        ) { errMsg -> errorMessage = errMsg }
+                            onSuccess = {
+                                onSuccess()
+                            },
+                            onError = { error ->
+                                errorMessage = error
+                            }
+                        )
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Login")
+            }
+
+            // Error message display
+            if (errorMessage.isNotEmpty()) {
+                Text(
+                    text = errorMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(10.dp)
+                )
             }
 
             // Recover Password Function call
@@ -198,7 +209,9 @@ fun LoginScreen(navController: NavController, onLoginSuccess: () -> Unit) {
             }
         }
     }
-}
+
+
+
 
 
 // Function to handle email and password sign-in
@@ -212,8 +225,26 @@ private fun signInWithEmail(
     auth.signInWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                onSuccess()
+                // Authentication successful, now check if user profile exists in Firestore
+                val userId = auth.currentUser?.uid ?: ""
+                val db = FirebaseFirestore.getInstance()
+                db.collection("UserProfile").document(userId).get()
+                    .addOnSuccessListener { documentSnapshot ->
+                        if (documentSnapshot.exists()) {
+                            // User profile exists
+                            onSuccess()
+
+                        } else {
+                            // User profile does not exist
+                            onError("User profile does not exist")
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        onError(e.message ?: "An unknown error occurred while fetching user profile")
+
+                    }
             } else {
+                // Authentication failed
                 onError(task.exception?.message ?: "An unknown error occurred")
             }
         }

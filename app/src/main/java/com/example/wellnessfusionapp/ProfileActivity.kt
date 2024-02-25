@@ -10,12 +10,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
+import com.example.wellnessfusionapp.Navigation.BottomNavBar
+import com.example.wellnessfusionapp.Navigation.MainTopBar
 import kotlinx.coroutines.launch
 
 // Profile Screen content and functions
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun ProfileScreen(navController: NavController) {
+fun ProfileScreen(navController: NavController ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     Scaffold(

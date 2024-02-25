@@ -6,6 +6,7 @@ import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -37,7 +38,6 @@ import androidx.navigation.NavController
 import com.example.wellnessfusionapp.DataTypes.WorkoutType
 import com.example.wellnessfusionapp.Models.Category
 import com.example.wellnessfusionapp.ViewModels.CategoryViewModel
-
 
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -74,34 +74,51 @@ fun CategoryScreenLayout(
     viewModel: CategoryViewModel,
     categories: List<Category>,
     title: String,
-)
-
-{
+) {
     Scaffold(
         topBar = {
             CustomTopBar(
                 title = title,
                 navController = navController,
+                viewModel = viewModel,
                 actions = {
-                    IconButton(onClick = { /* TODO: Implement help action */ }) {
-                        Icon(Icons.Filled.Info, contentDescription = "Help")
+                    IconButton(onClick = {
+                        // Navigate to the info screen
+                        navController.navigate("info")
+                    }) {
+                        Icon(imageVector = Icons.Filled.Info, contentDescription = "Info")
                     }
                 }
             )
         },
         bottomBar = {
-            Button(
-                onClick = {
-                    val selectedCategories = viewModel.getSelectedCategories()
-                    val selectedCategoriesString = selectedCategories.joinToString(",")
-                    Log.d("Navigation", "Navigating to exerciseSelection with categories: $selectedCategoriesString")
-                    navController.navigate("exerciseSelection/$selectedCategoriesString")
-                },
+            Column (
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Text(text = "Submit")
+                    .padding(16.dp),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ){
+                Button(
+                    onClick = {
+                        val selectedCategories = viewModel.getSelectedCategoryIds()
+                        if (selectedCategories.isNotEmpty()) {
+                            val selectedCategoriesString = selectedCategories.joinToString(",")
+                            Log.d(
+                                "Navigation",
+                                "Navigating to exerciseSelection with categories: $selectedCategoriesString"
+                            )
+
+                            // Navigate and pass selected categories as a string argument
+                            navController.navigate("exerciseSelection/$selectedCategoriesString")
+                        } else {
+                            // Provide feedback to the user about needing to select at least one category
+                            // This could be a Toast, Snackbar, or any other form of user feedback you prefer
+                        }
+                    }
+                ) {
+                    Text("Submit Choices")
+                }
             }
         }
     )
@@ -110,7 +127,7 @@ fun CategoryScreenLayout(
             // Introductory text above the categories
             Text(
                 text = "Pick up to 3 categories to improve your wellness.",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier
                     .padding(30.dp)
                     .align(Alignment.CenterHorizontally)
@@ -127,7 +144,7 @@ fun CategoryScreenLayout(
                             // Toggle the selection state
                             viewModel.updateCategorySelection(
                                 type = if (title == "Zen Categories") WorkoutType.ZEN else WorkoutType.PHYSICAL,
-                                categoryId = categories[index].id,
+                                categoryId = categories[index].categoryId,
                                 isSelected = isSelected
                             )
                         }
@@ -152,10 +169,12 @@ fun CategoryItem(category: Category, onCategorySelected: (Boolean) -> Unit) {
         )
 
     ) {
-        Column(modifier = Modifier
-            .padding(10.dp)
-            .fillMaxWidth()
-            .fillMaxHeight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            modifier = Modifier
+                .padding(10.dp)
+                .fillMaxWidth()
+                .fillMaxHeight(1f), horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Icon(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -163,14 +182,16 @@ fun CategoryItem(category: Category, onCategorySelected: (Boolean) -> Unit) {
                 imageVector = category.icon,
                 contentDescription = category.name
             )
-        Text(text = category.name)
+            Text(text = category.name)
         }
     }
 }
 
+@JvmOverloads
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomTopBar(
+    viewModel: CategoryViewModel,
     title: String,
     navController: NavController,
     showBackButton: Boolean = true,
@@ -179,16 +200,19 @@ fun CustomTopBar(
     TopAppBar(
         navigationIcon = {
             if (showBackButton) {
-                run {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back")
-                    }
+                IconButton(onClick = {
+                    Log.d("Navigation", "Back button pressed")
+                    viewModel.clearCategorySelections()// Call the callback when back button is pressed
+                    navController.navigateUp()
+                }) {
+                    Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back")
                 }
-            } else null
+            }
         },
         title = { Text(text = title) },
         actions = actions,
         colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
     )
 }
+
 

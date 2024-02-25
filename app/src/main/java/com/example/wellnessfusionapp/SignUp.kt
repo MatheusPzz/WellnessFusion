@@ -45,14 +45,16 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.wellnessfusionapp.Models.UserProfile
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun SignUpScreen(navController: NavController) {
-    var username by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -102,8 +104,8 @@ fun SignUpScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(30.dp))
                 OutlinedTextField(
-                    value = username,
-                    onValueChange = { username = it },
+                    value = name,
+                    onValueChange = { name = it },
                     label = { Text("Username") },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
@@ -155,11 +157,18 @@ fun SignUpScreen(navController: NavController) {
                                 registerUser(
                                     email,
                                     password,
+                                    UserProfile(
+                                        name = name,
+                                        email = email,
+                                        userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+                                    ),
                                     coroutineScope,
                                     snackbarHostState,
                                     navController
                                 )
                             }
+
+                            navController.navigate("login")
                         }
                     },
                     modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -187,27 +196,48 @@ fun SignUpScreen(navController: NavController) {
     }
 }
 
+fun createUserProfile(
+    userProfile: UserProfile,
+    onSuccess: () -> Unit,
+    onError: (String) -> Unit
+) {
+    val db = FirebaseFirestore.getInstance()
+    db.collection("UserProfile").document(userProfile.userId)
+        .set(userProfile)
+        .addOnSuccessListener { onSuccess() }
+        .addOnFailureListener { e -> onError(e.message ?: "An unknown error occurred") }
+}
+
 private fun registerUser(
     email: String,
     password: String,
-    scope: CoroutineScope, // Pass the CoroutineScope to the function
+    userProfile: UserProfile, // Assuming this is filled with the necessary user profile data
+    scope: CoroutineScope,
     snackBarHostState: SnackbarHostState,
-    navController: NavController,
-
-    ) {
+    navController: NavController
+) {
     val auth = FirebaseAuth.getInstance()
     auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
         if (task.isSuccessful) {
-            // Use the CoroutineScope to launch a coroutine for the snackbar
-            scope.launch {
-                snackBarHostState.showSnackbar("Registration successful.")
-            }
-            navController.navigate("login") {
-                // Clear back stack
-                popUpTo(0) { inclusive = true }
-            }
+            // User is successfully registered and authenticated
+            val userId = auth.currentUser?.uid ?: return@addOnCompleteListener
+            userProfile.userId = userId // Ensure the userProfile has the correct userId
+            createUserProfile(userProfile, {
+                // Success callback
+                scope.launch {
+                    snackBarHostState.showSnackbar("Registration and profile creation successful.")
+                }
+                navController.navigate("login") {
+                    popUpTo(0) { inclusive = true }
+                }
+            }, { errMsg ->
+                // Error callback
+                scope.launch {
+                    snackBarHostState.showSnackbar("Profile creation failed: $errMsg")
+                }
+            })
         } else {
-            // If sign in fails, display a message to the user.
+            // Registration failed
             task.exception?.let { exception ->
                 scope.launch {
                     snackBarHostState.showSnackbar("Registration failed: ${exception.localizedMessage}")

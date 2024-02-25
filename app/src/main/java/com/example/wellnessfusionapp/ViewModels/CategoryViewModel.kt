@@ -1,86 +1,87 @@
 package com.example.wellnessfusionapp.ViewModels
 
-import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import com.example.wellnessfusionapp.DataTypes.WorkoutType
 import com.example.wellnessfusionapp.Models.Category
-import com.example.wellnessfusionapp.Models.Exercise
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.flow.Flow
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class CategoryViewModel : ViewModel() {
+@HiltViewModel
+class CategoryViewModel @Inject constructor() : ViewModel() {
     private val _physicalCategory = MutableStateFlow<List<Category>>(
         listOf(
-            Category("1", "Chest", false, Icons.Default.AccountBox),
-            Category("2", "Arms", false, Icons.Default.AccountBox),
-            Category("3", "Back", false, Icons.Default.AccountBox),
-            Category("4", "Legs", false, Icons.Default.AccountBox),
-            Category("5", "Shoulders", false, Icons.Default.AccountBox),
-            Category("6", "Abs", false, Icons.Default.AccountBox),
+            Category("0", "Chest", false, Icons.Default.AccountBox),
+            Category("1", "Arms", false, Icons.Default.AccountBox),
+            Category("2", "Back", false, Icons.Default.AccountBox),
+            Category("3", "Legs", false, Icons.Default.AccountBox),
+            Category("4", "Shoulders", false, Icons.Default.AccountBox),
+            Category("5", "Abs", false, Icons.Default.AccountBox),
         )
     )
     private val _zenCategory = MutableStateFlow<List<Category>>(
         listOf(
-            Category("7", "Meditation", false, Icons.Default.AccountBox),
-            Category("8", "Breathing", false, Icons.Default.AccountBox),
-            Category("9", "Mindfulness", false, Icons.Default.AccountBox),
-            Category("10", "Yoga", false, Icons.Default.AccountBox),
-            Category("11", "Stretching", false, Icons.Default.AccountBox),
-            Category("12", "Gaming", false, Icons.Default.AccountBox),
+            Category("6", "Meditation", false, Icons.Default.AccountBox),
+            Category("7", "Breathing", false, Icons.Default.AccountBox),
+            Category("8", "Mindfulness", false, Icons.Default.AccountBox),
+            Category("9", "Yoga", false, Icons.Default.AccountBox),
+            Category("10", "Stretching", false, Icons.Default.AccountBox),
+            Category("11", "Gaming", false, Icons.Default.AccountBox),
         )
     )
 
     // Expose as read-only StateFlow
-    val zenCategory: StateFlow<List<Category>> = _zenCategory.asStateFlow()
     val physicalCategory: StateFlow<List<Category>> = _physicalCategory.asStateFlow()
+    val zenCategory: StateFlow<List<Category>> = _zenCategory.asStateFlow()
 
-    private val db = FirebaseFirestore.getInstance()
 
     // Function to update the selection of a category
-     fun updateCategorySelection(type: WorkoutType, categoryId: String, isSelected: Boolean) {
-        val currentList = if (type == WorkoutType.PHYSICAL) _physicalCategory.value else _zenCategory.value
-        val selectedCount = currentList.count { it.isSelected }
-
-        if (isSelected && selectedCount >= 3) {
-            // Emit message to UI or handle the logic to prevent more than 3 selections
-            return
+    fun updateCategorySelection(type: WorkoutType, categoryId: String, isSelected: Boolean) {
+        val targetFlow = if (type == WorkoutType.PHYSICAL) _physicalCategory else _zenCategory
+        targetFlow.value = targetFlow.value.map {
+            if (it.categoryId == categoryId) it.copy(isSelected = isSelected) else it
         }
+        notifyCategorySelectionChanged()
+    }
 
-        val updatedCategories = currentList.map { category ->
-            if (category.id == categoryId) category.copy(isSelected = isSelected) else category
-        }
-
-        if (type == WorkoutType.PHYSICAL) {
-            _physicalCategory.value = updatedCategories
-        } else {
-            _zenCategory.value = updatedCategories
+    fun clearCategorySelections() {
+        _physicalCategory.value = _physicalCategory.value.map { it.copy(isSelected = false) }
+        _zenCategory.value = _zenCategory.value.map { it.copy(isSelected = false) }
+        viewModelScope.launch {
+            SharedCategorySelection.updateSelectedCategoryIds(emptyList())
         }
     }
 
-    fun getExercisesForCategory(categoryId: String): Flow<List<Exercise>> = flow {
-        try {
-            val exercises = db.collection("Exercises Collection")
-                .whereEqualTo("categoryId", categoryId)
-                .get()
-                .await()
-                .toObjects(Exercise::class.java)
-            emit(exercises)
-        } catch (e: Exception) {
-            Log.e("CategoryViewModel", "Error fetching exercises for category $categoryId", e)
-            emit(emptyList<Exercise>()) // Emit an empty list or a specific error object
+    private fun notifyCategorySelectionChanged() {
+        viewModelScope.launch {
+            val selectedIds = (_physicalCategory.value + _zenCategory.value)
+                .filter { it.isSelected }
+                .map { it.categoryId }
+            SharedCategorySelection.updateSelectedCategoryIds(selectedIds)
         }
     }
 
-    fun getSelectedCategories(): List<String> {
+    fun getSelectedCategoryIds(): List<String> {
         return (_physicalCategory.value + _zenCategory.value)
             .filter { it.isSelected }
-            .map { it.id }
+            .map { it.categoryId }
+    }
+
+    companion object SharedCategorySelection {
+        private val _selectedCategoryIds = MutableSharedFlow<List<String>>(replay = 1)
+        val selectedCategoryIds: SharedFlow<List<String>> = _selectedCategoryIds
+
+        suspend fun updateSelectedCategoryIds(ids: List<String>) {
+            _selectedCategoryIds.emit(ids)
+        }
     }
 }
