@@ -92,18 +92,15 @@ fun MainNavHost(
             // Optionally, convert the string back to a list if needed for your logic
             val selectedCategoriesList =
                 selectedCategoriesString.split(",").filter { it.isNotBlank() }
-            ExerciseSelection(exerciseSelectionViewModel = exerciseSelectionViewModel, navController = navController,viewModel = categoryViewModel)
+            ExerciseSelection(
+                exerciseSelectionViewModel = exerciseSelectionViewModel,
+                navController = navController,
+                viewModel = categoryViewModel
+            )
         }
-        composable(
-            route = "workoutPlan/{selectedExercisesIds}",
-            arguments = listOf(navArgument("selectedExercisesIds") { type = NavType.StringType })
-        ) { backStackEntry ->
-            // Parses the passed comma-separated string of exercise IDs back into a list
-            val exerciseIdsString = backStackEntry.arguments?.getString("selectedExercises")
-            val exerciseIds = exerciseIdsString?.split(",")?.filter{ it.isNotBlank() }
+        composable( "generatePlan") {
+            WorkoutPlanScreen(navController, exerciseSelectionViewModel)
 
-            // Add logging here to check the received exercise IDs
-            WorkoutPlanScreen(navController = navController , selectedExercisesIds = exerciseIds ?: emptyList(), viewModel = exerciseSelectionViewModel)
         }
     }
 }

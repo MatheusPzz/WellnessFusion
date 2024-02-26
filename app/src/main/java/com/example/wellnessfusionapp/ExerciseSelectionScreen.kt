@@ -86,23 +86,11 @@ fun ExerciseSelection(
             ) {
                 Button(
                     onClick = {
-                        val selectedExercises = exerciseSelectionViewModel.getSelectedExercises()
-                        if(selectedExercises.isNotEmpty()){
-                            val selectedExercisesString = selectedExercises.joinToString("")
-                            Log.d(
-                                "ExerciseSelection",
-                                "Selected exercises: $selectedExercisesString"
-                            )
-
-                            navController.navigate("workoutPlan/$selectedExercisesString")
-                        }else {
-                            Log.d("ExerciseSelection", "No exercises selected")
-                        }
+                        // Assuming you have a route named "generatePlan" and you're using NavArgs or ViewModel to pass selected exercises
+                        navController.navigate("generatePlan")
                     }
-
-
                 ) {
-                        Text(text = "Generate Plan")
+                    Text(text = "Generate Plan")
                 }
             }
         }
@@ -114,14 +102,14 @@ fun ExerciseSelection(
             verticalArrangement = Arrangement.SpaceEvenly,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            CategoriesWithExercises(groupedExercises = groupedExercises)
+            CategoriesWithExercises(groupedExercises = groupedExercises, viewModel = exerciseSelectionViewModel)
         }
     }
 }
 @OptIn(ExperimentalCoilApi::class)
 @Composable
 fun ExerciseDetail(exercise: Exercise, viewModel: ExerciseSelectionViewModel){
-    var isSelected: Boolean by remember { mutableStateOf(exercise.isSelected) }
+    val isSelected: Boolean by remember { mutableStateOf(exercise.isSelected) }
 
 
     Row(modifier = Modifier.padding(2.dp), verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.SpaceBetween ) {
@@ -149,10 +137,12 @@ fun ExerciseDetail(exercise: Exercise, viewModel: ExerciseSelectionViewModel){
             .padding(6.dp)
             .fillMaxHeight()
     ) {
-        Checkbox(checked =isSelected , onCheckedChange = {
-            isSelected = it
-            viewModel.toggleExerciseSelection(exercise)
-        } )
+        Checkbox(
+            checked = isSelected,
+            onCheckedChange = {
+                viewModel.toggleExerciseSelection(exercise)
+            }
+        )
     }
 }
 
@@ -218,11 +208,11 @@ fun ExercisesList(exercises: List<Exercise>) {
 
 // This padding for outside of the card
 @Composable
-fun CategoriesWithExercises(groupedExercises: Map<String, List<Exercise>>) {
+fun CategoriesWithExercises(groupedExercises: Map<String, List<Exercise>>, viewModel: ExerciseSelectionViewModel) {
     LazyColumn(modifier = Modifier.padding(horizontal = 25.dp)) {
         groupedExercises.forEach { (categoryName, exercises) ->
             item {
-                ExpandableCard(categoryName = categoryName, exercises = exercises, viewModel = ExerciseSelectionViewModel())
+                ExpandableCard(categoryName = categoryName, exercises = exercises, viewModel = viewModel)
             }
         }
     }

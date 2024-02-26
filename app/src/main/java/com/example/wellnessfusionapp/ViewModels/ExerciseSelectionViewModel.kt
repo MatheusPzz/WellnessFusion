@@ -19,35 +19,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
+@Suppress("IMPLICIT_CAST_TO_ANY")
 @HiltViewModel
 class ExerciseSelectionViewModel @Inject constructor() : ViewModel() {
-    private val _exercisesState = MutableStateFlow<List<Exercise>>(emptyList())
-    val exercisesState: StateFlow<List<Exercise>> = _exercisesState.asStateFlow()
-
-
-    // Upon exercise selection, save it in a list
-    private val _selectedExercises = MutableStateFlow<List<Exercise>>(emptyList())
-    val selectedExercises: StateFlow<List<Exercise>> = _selectedExercises.asStateFlow()
-
-    fun toggleExerciseSelection(exercise: Exercise) {
-        viewModelScope.launch {
-            val currentList = _selectedExercises.value.toMutableList()
-            if (currentList.contains(exercise)){
-                currentList.remove(exercise)
-            } else {
-                currentList.add(exercise)
-
-            }
-        }
-    }
-
-    fun getSelectedExercises(): List<Exercise> = exercisesState.value.filter { it.isSelected }
-
-
 
 
     private val _groupedExercisesState = MutableStateFlow<Map<String, List<Exercise>>>(mapOf())
-    val groupedExercisesState: StateFlow<Map<String, List<Exercise>>> = _groupedExercisesState.asStateFlow()
+    val groupedExercisesState: StateFlow<Map<String, List<Exercise>>> =
+        _groupedExercisesState.asStateFlow()
+
 
     init {
         listenToCategorySelectionChanges()
@@ -88,10 +68,29 @@ class ExerciseSelectionViewModel @Inject constructor() : ViewModel() {
         }
         return exercises
     }
+
+
+// Exercise selection logic
+
+
+
+    // clear exercise selection
+    
+
+    private val _selectedExercises = MutableStateFlow<List<Exercise>>(emptyList())
+    val selectedExercises: StateFlow<List<Exercise>> = _selectedExercises.asStateFlow()
+    val currentSelection = _selectedExercises.value
+    fun toggleExerciseSelection(exercise: Exercise) {
+        val currentSelection = _selectedExercises.value.toMutableList()
+        if (currentSelection.any { it.id == exercise.id }) {
+            currentSelection.removeAll { it.id == exercise.id }
+        } else {
+            currentSelection.add(exercise)
+        }
+        _selectedExercises.value = currentSelection
+    }
+
 }
-
-
-
 //    val response: MutableState<DataState<List<Exercise>>> = mutableStateOf(DataState.Loading)
 //    init {
 //        fetchDataFromDatabase()
