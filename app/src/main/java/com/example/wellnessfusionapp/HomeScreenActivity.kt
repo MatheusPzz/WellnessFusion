@@ -53,7 +53,7 @@ fun HomeScreen(navController: NavController, viewModel: CategoryViewModel) {
         topBar = {
 
             MainTopBar(
-                title = "Wellness Fusion",
+                title = "Welcome to Wellness Fusion",
                 navController = navController,
                 onMenuClick = {
                     scope.launch {
@@ -68,148 +68,97 @@ fun HomeScreen(navController: NavController, viewModel: CategoryViewModel) {
         },
         bottomBar = { BottomNavBar(navController) }
     ) {
-        AppModalNavigationDrawer(
-            drawerState = drawerState,
-            scope = scope,
-            navController = navController
-        ) { innerPadding ->
-
+        paddingValues ->
             Column(
                 modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize(),
-                verticalArrangement = Arrangement.SpaceEvenly
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                verticalArrangement = Arrangement.SpaceEvenly,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
-                Column(
+                Text(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(750.dp)
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.SpaceEvenly
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+
+                    textAlign = TextAlign.Center,
+                    text = "Quick Workout Planner",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+
+
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceAround
                 ) {
-                    Box(
+                    //button physical
+                    Button(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(70.dp)
-                            .background(MaterialTheme.colorScheme.primary),
-                        contentAlignment = Alignment.Center
-                    ) {
+                            .width(200.dp)
+                            .padding(0.dp)
+                            .height(260.dp),
+                        onClick = { navController.navigate("physicalCategory") },
+                        shape = RoundedCornerShape(0.dp)
+                    )
+                    {
                         Text(
-                            text = "Welcome to Wellness Fusion",
-                            style = MaterialTheme.typography.titleLarge,
+                            "Physical",
+                            style = MaterialTheme.typography.bodySmall
                         )
 
                     }
-
-                    QuickWorkoutPlan(navController)
+                    //button mental
+                    Button(
+                        modifier = Modifier
+                            .width(200.dp)
+                            .padding(0.dp)
+                            .height(260.dp),
+                        onClick = { navController.navigate("zenCategory") },
+                        shape = RoundedCornerShape(0.dp)
+                    )
+                    {
+                        Text(
+                            "Mental",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth().height(200.dp),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    //Desc
+                    Box(
+                        modifier = Modifier
+                            .width(200.dp)
+                            .height(250.dp)
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                    ) {
+                        Text(
+                            textAlign = TextAlign.Center,
+                            text = "Select a category to get started,Select a category to get started,Select a category to get started,Select a category to get started",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .width(200.dp)
+                            .height(200.dp)
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                    ) {
+                        Text(
+                            textAlign = TextAlign.Center,
+                            text = "Select a category to get started,Select a category to get started,Select a category to get started,Select a category to get started",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
             }
         }
     }
-}
 
-@Composable
-private fun QuickWorkoutPlan(navController: NavController) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(700.dp),
-        verticalArrangement = Arrangement.SpaceEvenly
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(0.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.Start
-        ) {
-
-
-            Text(
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-
-                textAlign = TextAlign.Center,
-                text = "Quick Workout Planner",
-                style = MaterialTheme.typography.headlineSmall
-            )
-        }
-
-
-        Spacer(modifier = Modifier.height(50.dp))
-        // Added to provide spacing between the title and the options
-        // row buttons
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween// Adjusted for even spacing between workout options
-        ) {
-            //button physical
-            Button(
-                modifier = Modifier
-                    .padding(12.dp)
-                    .width(165.dp)
-                    .height(140.dp),
-                onClick = { navController.navigate("physicalCategory") },
-                shape = RoundedCornerShape(10.dp)
-            )
-            {
-                Text(
-                    "Physical",
-                    style = MaterialTheme.typography.bodySmall
-                )
-
-            }
-            //button mental
-            Button(
-                modifier = Modifier
-                    .padding(12.dp)
-                    .width(165.dp)
-                    .height(140.dp),
-                onClick = { navController.navigate("zenCategory") },
-                shape = RoundedCornerShape(10.dp)
-            )
-            {
-                Text(
-                    "Mental",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(25.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-            //Desc
-            Box(
-                modifier = Modifier
-                    .width(180.dp)
-                    .padding(16.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-            ) {
-                Text(
-                    textAlign = TextAlign.Center,
-                    text = "Select a category to get started,Select a category to get started,Select a category to get started,Select a category to get started",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .width(180.dp)
-                    .padding(16.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-            ) {
-                Text(
-                    textAlign = TextAlign.Center,
-                    text = "Select a category to get started,Select a category to get started,Select a category to get started,Select a category to get started",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-        }
-    }
-}
 
 
 @Composable

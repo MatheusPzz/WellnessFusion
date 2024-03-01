@@ -1,5 +1,6 @@
 import android.annotation.SuppressLint
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -45,7 +46,13 @@ import com.example.wellnessfusionapp.ViewModels.ExerciseSelectionViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.ShapeDefaults
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
 import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
@@ -59,17 +66,21 @@ fun ExerciseSelection(
     navController: NavController,
     viewModel: CategoryViewModel
 ) {
-//    val exercises = exerciseSelectionViewModel.state.value
+
+    var planName by remember { mutableStateOf("") }
+    var showDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
     val groupedExercises by exerciseSelectionViewModel.groupedExercisesState.collectAsState()
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
+            TopAppBar(
                 title = { Text(text = "Exercise Selection") },
                 navigationIcon = {
                     IconButton(onClick = {
                         viewModel.clearCategorySelections()
-                        navController.popBackStack()
+                        navController.navigateUp()
                     }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
@@ -77,24 +88,59 @@ fun ExerciseSelection(
             )
         },
         bottomBar = {
-            Column (
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Button(
-                    onClick = {
-                        // Assuming you have a route named "generatePlan" and you're using NavArgs or ViewModel to pass selected exercises
-                        navController.navigate("generatePlan")
-                    }
-                ) {
-                    Text(text = "Generate Plan")
+                Button(onClick = {
+                    showDialog = true
+                }) {
+                    Text(text = "Create Plan")
+                }
+
+                if (showDialog) {
+                    var localPlanName by remember { mutableStateOf("") }
+
+                    AlertDialog(
+                        onDismissRequest = { showDialog = false },
+                        title = { Text(text = "Enter Workout Plan Name") },
+                        text = {
+                            TextField(
+                                value = localPlanName,
+                                onValueChange = { localPlanName = it },
+                                label = { Text("Workout Plan Name") }
+                            )
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = {
+                                    if (localPlanName.isNotEmpty()) {
+                                        planName = localPlanName
+                                        exerciseSelectionViewModel.saveWorkoutPlan(navController, planName)
+                                        Toast.makeText(context, "Workout Plan Created", Toast.LENGTH_SHORT).show()
+                                        showDialog = false
+                                        viewModel.clearCategorySelections()
+                                        exerciseSelectionViewModel.clearExerciseSelections()
+                                    } else {
+                                        Toast.makeText(context, "Please enter a plan name", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            ) {
+                                Text("Save")
+                            }
+                        },
+                        dismissButton = {
+                            Button(onClick = { showDialog = false }) {
+                                Text("Cancel")
+                            }
+                        }
+                    )
                 }
             }
-        }
-    ) { paddingValues ->
+        }) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -102,91 +148,121 @@ fun ExerciseSelection(
             verticalArrangement = Arrangement.SpaceEvenly,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            CategoriesWithExercises(groupedExercises = groupedExercises, viewModel = exerciseSelectionViewModel)
+            CategoriesWithExercises(
+                groupedExercises = groupedExercises,
+                viewModel = exerciseSelectionViewModel
+            )
         }
     }
 }
+
+
 @OptIn(ExperimentalCoilApi::class)
 @Composable
-fun ExerciseDetail(exercise: Exercise, viewModel: ExerciseSelectionViewModel){
-    val isSelected: Boolean by remember { mutableStateOf(exercise.isSelected) }
+fun ExerciseDetail(exercise: Exercise, viewModel: ExerciseSelectionViewModel) {
+    val isSelected = remember { mutableStateOf(viewModel.isExerciseSelected(exercise)) }
 
-
-    Row(modifier = Modifier.padding(2.dp), verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.SpaceBetween ) {
+    Row(
+        modifier = Modifier
+            .padding(0.dp)
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
         Column(
             modifier = Modifier
-                .padding(5.dp)
-            ,
-            verticalArrangement = Arrangement.SpaceBetween, horizontalAlignment = Alignment.Start
         ) {
-            AsyncImage(model = exercise.imageUrl , contentDescription = "Exercise Image", modifier = Modifier.size(160.dp))
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(text = exercise.name, style = MaterialTheme.typography.bodyLarge)
-
-        }
-        Column (
+            AsyncImage(
+                model = exercise.imageUrl,
+                contentDescription = "Exercise Image",
+                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                 modifier = Modifier
-                    .padding(start = 5.dp)
-                    .fillMaxHeight()
-        ){
-            Text(text = exercise.description ?: "No description", style = MaterialTheme.typography.bodyMedium)
+                    .width(170.dp)
+                    .height(300.dp)
+            )
+        }
+        Column(
+            modifier = Modifier
+                .padding(start = 10.dp)
+                .fillMaxHeight()
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.SpaceEvenly,
+            horizontalAlignment = Alignment.Start
+        ) {
+            Text(text = exercise.name, style = MaterialTheme.typography.bodyLarge)
+            Spacer(modifier = Modifier.padding(5.dp))
+            Text(
+                text = exercise.description ?: "No description",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(modifier = Modifier.padding(110.dp))
+            Column(
+                modifier = Modifier
+                    .padding(0.dp)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.Bottom,
+                horizontalAlignment = Alignment.End
+            ) {
+                Checkbox(
+                    checked = isSelected.value,
+                    onCheckedChange = {
+                        viewModel.toggleExerciseSelection(exercise)
+
+                        isSelected.value = viewModel.isExerciseSelected(exercise)
+                    }
+                )
+            }
         }
     }
-    Column (
-        modifier = Modifier
-            .padding(6.dp)
-            .fillMaxHeight()
-    ) {
-        Checkbox(
-            checked = isSelected,
-            onCheckedChange = {
-                viewModel.toggleExerciseSelection(exercise)
-            }
-        )
-    }
+
 }
 
 
-
-
 @Composable
-fun ExpandableCard(categoryName: String, exercises: List<Exercise>, viewModel: ExerciseSelectionViewModel) {
+fun ExpandableCard(
+    categoryName: String,
+    exercises: List<Exercise>,
+    viewModel: ExerciseSelectionViewModel
+) {
     var isExpanded by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp)
+            .fillMaxSize()
+            .padding(vertical = 10.dp)
     ) {
-        Column(modifier = Modifier
-            .padding(16.dp)
-            .fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .padding(15.dp)
+                .fillMaxWidth()
+        ) {
             Text(
                 text = categoryName,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleLarge
             )
             AnimatedVisibility(visible = isExpanded) {
-                Column (
+                Column(
                     modifier = Modifier
-                        .padding(top = 5.dp)
+                        .padding(top = 10.dp)
                         .fillMaxWidth()
-                ){
+                ) {
                     exercises.forEach { exercise ->
-                        Divider(Modifier.padding(vertical = 10.dp))
+                        Divider(Modifier.padding(vertical = 15.dp))
                         ExerciseDetail(exercise = exercise, viewModel = viewModel)
-                    }
                     }
                 }
             }
-            Icon(
-                imageVector = if (isExpanded) Icons.Filled.ArrowDropDown else Icons.Filled.ArrowDropDown,
-                contentDescription = if (isExpanded) "Collapse" else "Expand",
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .clickable { isExpanded = !isExpanded }
-            )
         }
+        Icon(
+            imageVector = if (isExpanded) Icons.Filled.ArrowDropDown else Icons.Filled.ArrowDropDown,
+            contentDescription = if (isExpanded) "Collapse" else "Expand",
+            modifier = Modifier
+                .size(80.dp)
+                .align(Alignment.End)
+                .clickable { isExpanded = !isExpanded }
+        )
     }
+}
 
 
 // This is a list of categories with exercises inside
@@ -195,8 +271,8 @@ fun ExpandableCard(categoryName: String, exercises: List<Exercise>, viewModel: E
 fun ExercisesList(exercises: List<Exercise>) {
     val groupedExercises = exercises.groupBy { it.categoryName }
 
-    LazyColumn{
-        groupedExercises.forEach { (categoryName,exercisesForCategory) ->
+    LazyColumn {
+        groupedExercises.forEach { (categoryName, exercisesForCategory) ->
             items(exercisesForCategory) { exercise ->
                 ExerciseCard(exercise = exercise)
             }
@@ -205,14 +281,20 @@ fun ExercisesList(exercises: List<Exercise>) {
 }
 
 
-
 // This padding for outside of the card
 @Composable
-fun CategoriesWithExercises(groupedExercises: Map<String, List<Exercise>>, viewModel: ExerciseSelectionViewModel) {
-    LazyColumn(modifier = Modifier.padding(horizontal = 25.dp)) {
+fun CategoriesWithExercises(
+    groupedExercises: Map<String, List<Exercise>>,
+    viewModel: ExerciseSelectionViewModel
+) {
+    LazyColumn(modifier = Modifier.padding(horizontal = 5.dp)) {
         groupedExercises.forEach { (categoryName, exercises) ->
             item {
-                ExpandableCard(categoryName = categoryName, exercises = exercises, viewModel = viewModel)
+                ExpandableCard(
+                    categoryName = categoryName,
+                    exercises = exercises,
+                    viewModel = viewModel
+                )
             }
         }
     }
@@ -223,15 +305,24 @@ fun ExerciseCard(exercise: Exercise) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(5.dp),
+            .padding(4.dp),
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
             Text(text = exercise.categoryName, style = MaterialTheme.typography.bodyMedium)
             Divider(modifier = Modifier.padding(vertical = 5.dp))
             Text(text = exercise.name, style = MaterialTheme.typography.titleMedium)
-            Text(text = exercise.description ?: "No description", style = MaterialTheme.typography.bodyMedium)
-            Text(text = "Reps: ${exercise.reps}", style = MaterialTheme.typography.bodyMedium)
-            Text(text = "Sets: ${exercise.sets}", style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = exercise.description ?: "No description",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "Reps: ${exercise.reps}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "Sets: ${exercise.sets}",
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }

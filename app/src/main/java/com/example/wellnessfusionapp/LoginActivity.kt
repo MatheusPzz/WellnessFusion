@@ -2,6 +2,7 @@
 
 package com.example.wellnessfusionapp
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -13,13 +14,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.key.Key.Companion.Copy
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.wellnessfusionapp.Models.UserProfile
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -34,6 +33,7 @@ fun LoginScreen(navController: NavController, onSuccess: () -> Unit) {
     var isPasswordRecoveryDialogOpen by remember { mutableStateOf(false) }
     var showRecoverySuccessSnackbar by remember { mutableStateOf(false) }
     var recoveryErrorMessage by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -111,7 +111,9 @@ fun LoginScreen(navController: NavController, onSuccess: () -> Unit) {
             Button(
                 onClick = {
                     if (email.isBlank() || password.isBlank()) {
-                        errorMessage = "Please fill in all the fields"
+                        Toast.makeText(context,
+                            "Please fill in all fields",
+                            Toast.LENGTH_SHORT).show()
                     } else {
                         signInWithEmail(
                             auth,
@@ -228,7 +230,7 @@ private fun signInWithEmail(
                 // Authentication successful, now check if user profile exists in Firestore
                 val userId = auth.currentUser?.uid ?: ""
                 val db = FirebaseFirestore.getInstance()
-                db.collection("UserProfile").document(userId).get()
+                db.collection("Users").document(userId).get()
                     .addOnSuccessListener { documentSnapshot ->
                         if (documentSnapshot.exists()) {
                             // User profile exists

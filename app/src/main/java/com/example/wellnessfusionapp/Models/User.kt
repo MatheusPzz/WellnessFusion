@@ -1,6 +1,6 @@
 package com.example.wellnessfusionapp.Models
 
-data class UserProfile(
+data class User(
     var userId: String,
     val email: String,
     val name: String? = null,
