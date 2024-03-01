@@ -1,18 +1,15 @@
 package com.example.wellnessfusionapp.Navigation
 
 import ExerciseSelection
-import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.List
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,7 +29,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
-import com.example.wellnessfusionapp.FavoritesScreen
 import com.example.wellnessfusionapp.HomeScreen
 import com.example.wellnessfusionapp.LoginScreen
 import com.example.wellnessfusionapp.PhysicalCategoryScreen
@@ -41,7 +37,8 @@ import com.example.wellnessfusionapp.SettingsScreen
 import com.example.wellnessfusionapp.SignUpScreen
 import com.example.wellnessfusionapp.ViewModels.CategoryViewModel
 import com.example.wellnessfusionapp.ViewModels.ExerciseSelectionViewModel
-import com.example.wellnessfusionapp.WorkoutPlanScreen
+import com.example.wellnessfusionapp.ViewModels.GeneratedWorkoutViewModel
+import com.example.wellnessfusionapp.WorkoutsScreen
 import com.example.wellnessfusionapp.ZenCategoryScreen
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -53,6 +50,7 @@ fun MainNavHost(
     categoryViewModel: CategoryViewModel,
     startDestination: String,
     exerciseSelectionViewModel: ExerciseSelectionViewModel,
+    generatedWorkoutViewModel: GeneratedWorkoutViewModel
 ) {
     NavHost(
         navController = navController as NavHostController,
@@ -63,11 +61,7 @@ fun MainNavHost(
             LoginScreen(navController = navController) {
                 // Navigate to the main content upon login success
                 navController.navigate("home") {
-                    popUpTo(navController.graph.findStartDestination().id) {
-                        saveState = true
-                    }
-                    launchSingleTop = true
-                    restoreState = true
+
                 }
             }
         }
@@ -76,12 +70,16 @@ fun MainNavHost(
 
         composable("profile") { ProfileScreen(navController) }
 
-        composable("favorites") { FavoritesScreen(navController) }
+        composable("WorkoutPlans") {
+            WorkoutsScreen(
+                viewModel = generatedWorkoutViewModel,
+                navController = navController)
+        }
 
         composable("settings") { SettingsScreen(navController) }
 
-        composable("physicalCategory") { PhysicalCategoryScreen(navController, categoryViewModel) }
-        composable("zenCategory") { ZenCategoryScreen(navController, categoryViewModel) }
+        composable("physicalCategory") { PhysicalCategoryScreen(navController, categoryViewModel, title = String() ) }
+        composable("zenCategory") { ZenCategoryScreen(navController, categoryViewModel, title = String()) }
         composable(
             route = "exerciseSelection/{selectedCategories}",
             arguments = listOf(navArgument("selectedCategories") { type = NavType.StringType })
@@ -98,10 +96,6 @@ fun MainNavHost(
                 viewModel = categoryViewModel
             )
         }
-        composable( "generatePlan") {
-            WorkoutPlanScreen(navController, exerciseSelectionViewModel)
-
-        }
     }
 }
 
@@ -116,18 +110,18 @@ fun MainNavHost(
     @Composable
     fun BottomNavBar(navController: NavController) {
         val items = listOf(
-            NavigationItem("Home", Icons.Filled.Home, Icons.Outlined.Home, "home"),
-            NavigationItem("Profile", Icons.Filled.Person, Icons.Outlined.Person, "profile"),
             NavigationItem(
-                "Favorites",
+                "Workouts",
                 Icons.Filled.Favorite,
-                Icons.Outlined.Favorite,
-                "favorites"
+                Icons.Outlined.FavoriteBorder,
+                "WorkoutPlans"
+
             ),
+            NavigationItem("Home", Icons.Filled.Home, Icons.Outlined.Home, "home"),
             NavigationItem(
                 "Settings",
-                Icons.Filled.Settings,
-                Icons.Outlined.Settings,
+                Icons.Filled.List,
+                Icons.Outlined.List,
                 "settings"
             )
         )

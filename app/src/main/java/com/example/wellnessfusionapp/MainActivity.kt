@@ -30,6 +30,7 @@ import androidx.navigation.navigation
 import com.example.wellnessfusionapp.Navigation.MainNavHost
 import com.example.wellnessfusionapp.ViewModels.CategoryViewModel
 import com.example.wellnessfusionapp.ViewModels.ExerciseSelectionViewModel
+import com.example.wellnessfusionapp.ViewModels.GeneratedWorkoutViewModel
 import com.example.wellnessfusionapp.ui.theme.WellnessFusionAppTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -55,7 +56,7 @@ class MainActivity : ComponentActivity() {
 
                 val startDestination = if (authState != null) "home" else "login"
 
-                MainNavHost(navController, CategoryViewModel(), startDestination, ExerciseSelectionViewModel())
+                MainNavHost(navController, CategoryViewModel(), startDestination, ExerciseSelectionViewModel(), GeneratedWorkoutViewModel())
             }
         }
     }

@@ -4,11 +4,14 @@ package com.example.wellnessfusionapp
 
 import android.annotation.SuppressLint
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -33,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.wellnessfusionapp.DataTypes.WorkoutType
@@ -42,39 +46,9 @@ import com.example.wellnessfusionapp.ViewModels.CategoryViewModel
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun PhysicalCategoryScreen(navController: NavController, viewModel: CategoryViewModel) {
-    // ... your code
+fun PhysicalCategoryScreen(navController: NavController, viewModel: CategoryViewModel, title: String) {
+    val context = LocalContext.current
     val categories = viewModel.physicalCategory.collectAsState().value
-    CategoryScreenLayout(
-        navController = navController,
-        viewModel = viewModel,  // Pass viewModel here
-        categories = categories,
-        title = "Physical Categories",
-    )
-}
-
-
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@Composable
-fun ZenCategoryScreen(navController: NavController, viewModel: CategoryViewModel) {
-    // ... your code
-    val categories = viewModel.zenCategory.collectAsState().value
-    CategoryScreenLayout(
-        navController = navController,
-        viewModel = viewModel,  // Pass viewModel here
-        categories = categories,
-        title = "Zen Categories",
-    )
-}
-
-
-@Composable
-fun CategoryScreenLayout(
-    navController: NavController,
-    viewModel: CategoryViewModel,
-    categories: List<Category>,
-    title: String,
-) {
     Scaffold(
         topBar = {
             CustomTopBar(
@@ -102,6 +76,7 @@ fun CategoryScreenLayout(
                 Button(
                     onClick = {
                         val selectedCategories = viewModel.getSelectedCategoryIds()
+
                         if (selectedCategories.isNotEmpty()) {
                             val selectedCategoriesString = selectedCategories.joinToString(",")
                             Log.d(
@@ -109,11 +84,9 @@ fun CategoryScreenLayout(
                                 "Navigating to exerciseSelection with categories: $selectedCategoriesString"
                             )
 
-                            // Navigate and pass selected categories as a string argument
                             navController.navigate("exerciseSelection/$selectedCategoriesString")
                         } else {
-                            // Provide feedback to the user about needing to select at least one category
-                            // This could be a Toast, Snackbar, or any other form of user feedback you prefer
+                            Toast.makeText(context, "Please select at least one category", Toast.LENGTH_SHORT).show()
                         }
                     }
                 ) {
@@ -123,10 +96,10 @@ fun CategoryScreenLayout(
         }
     )
     { padding ->
-        Column(modifier = Modifier.padding(padding)) {
+        Column(modifier = Modifier.padding(padding).fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
             // Introductory text above the categories
             Text(
-                text = "Pick up to 3 categories to improve your wellness.",
+                text = "Category Selection",
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier
                     .padding(30.dp)
@@ -134,7 +107,7 @@ fun CategoryScreenLayout(
             )
 
             LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
+                columns = GridCells.Fixed(1),
                 modifier = Modifier.padding(16.dp)
             ) {
                 items(categories.size) { index ->
@@ -155,6 +128,99 @@ fun CategoryScreenLayout(
     }
 }
 
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Composable
+fun ZenCategoryScreen(navController: NavController, viewModel: CategoryViewModel, title: String) {
+    val context = LocalContext.current
+    // ... your code
+    val categories = viewModel.zenCategory.collectAsState().value
+    Scaffold(
+        topBar = {
+            CustomTopBar(
+                title = title,
+                navController = navController,
+                viewModel = viewModel,
+                actions = {
+                    IconButton(onClick = {
+                        // Navigate to the info screen
+                        navController.navigate("info")
+                    }) {
+                        Icon(imageVector = Icons.Filled.Info, contentDescription = "Info")
+                    }
+                }
+            )
+        },
+        bottomBar = {
+            Column (
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ){
+                Button(
+                    onClick = {
+                        val selectedCategories = viewModel.getSelectedCategoryIds()
+
+
+                        if (selectedCategories.isNotEmpty()) {
+                            val selectedCategoriesString = selectedCategories.joinToString(",")
+                            Log.d(
+                                "Navigation",
+                                "Navigating to exerciseSelection with categories: $selectedCategoriesString"
+                            )
+
+                            navController.navigate("exerciseSelection/$selectedCategoriesString")
+                        } else {
+
+                            Toast.makeText(context, "Please select at least one category", Toast.LENGTH_SHORT).show()
+
+                        }
+                    }
+                ) {
+                    Text("Submit Choices")
+                }
+            }
+        }
+    )
+    { padding ->
+        Column(modifier = Modifier.padding(padding).fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+            // Introductory text above the categories
+            Text(
+                text = "Category Selection",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier
+                    .padding(30.dp)
+                    .align(Alignment.CenterHorizontally)
+            )
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(1),
+                modifier = Modifier.padding(16.dp)
+            ) {
+                items(categories.size) { index ->
+                    CategoryItem(
+                        category = categories[index],
+                        onCategorySelected = { isSelected ->
+                            // Toggle the selection state
+                            viewModel.updateCategorySelection(
+                                type = if (title == "Zen Categories") WorkoutType.ZEN else WorkoutType.PHYSICAL,
+                                categoryId = categories[index].categoryId,
+                                isSelected = isSelected
+                            )
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
 @Composable
 fun CategoryItem(category: Category, onCategorySelected: (Boolean) -> Unit) {
     Card(
@@ -171,7 +237,7 @@ fun CategoryItem(category: Category, onCategorySelected: (Boolean) -> Unit) {
     ) {
         Column(
             modifier = Modifier
-                .padding(10.dp)
+                .padding(0.dp)
                 .fillMaxWidth()
                 .fillMaxHeight(1f), horizontalAlignment = Alignment.CenterHorizontally
         ) {

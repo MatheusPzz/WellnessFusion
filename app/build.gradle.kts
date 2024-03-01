@@ -57,11 +57,12 @@ android {
 
 dependencies {
 
+    implementation ("com.google.accompanist:accompanist-pager:0.20.0")
+    implementation ("androidx.compose.runtime:runtime-livedata:1.6.2")
     implementation ("io.coil-kt:coil-compose:2.5.0")
     implementation ("com.google.dagger:hilt-android:2.38.1")
     implementation ("com.google.firebase:firebase-firestore-ktx:latest_version")
-    implementation("androidx.compose.ui:ui:1.6.1")
-    // Use the latest version
+    implementation("androidx.compose.ui:ui:1.6.2")
     implementation ("com.google.firebase:firebase-analytics-ktx")
     implementation ("com.google.firebase:firebase-auth-ktx")
 
