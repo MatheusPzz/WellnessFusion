@@ -149,7 +149,7 @@ fun WorkoutCard(
     LaunchedEffect(workout.exercises) {
         viewModel.fetchExercisesDetails(workout.exercises)
     }
-
+ //
     Card(modifier = Modifier.padding(15.dp)) {
         Column(modifier = Modifier.padding(0.dp)) {
             Row(modifier = Modifier.fillMaxWidth().padding(10.dp), horizontalArrangement = Arrangement.SpaceBetween) {
