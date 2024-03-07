@@ -6,9 +6,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.wellnessfusionapp.Models.Exercise
-import com.example.wellnessfusionapp.Models.ExerciseLog
+import com.example.wellnessfusionapp.Models.ExerciseDetail
 import com.example.wellnessfusionapp.Models.Instructions
 import com.example.wellnessfusionapp.Models.Notes
+import com.example.wellnessfusionapp.Models.TrainingLog
 import com.example.wellnessfusionapp.Models.WorkoutPlan
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
@@ -16,12 +17,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.firestore
-import com.google.type.Date
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -153,70 +154,124 @@ class MainViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    fun saveExerciseLog(logName: String, workoutPlanId: String, exerciseLogs: List<ExerciseLog>) {
+    fun saveExerciseLog(
+        logName: String,
+        workoutPlanId: String,
+        exerciseLogs: List<ExerciseDetail>
+    ) {
         viewModelScope.launch {
             val userId = getCurrentUserId()
-            val logEntry = hashMapOf(
-                "logName" to logName,
-                "workoutPlanId" to workoutPlanId,
-                "logs" to exerciseLogs,
-                "date" to Timestamp.now()
+            val logEntry = TrainingLog(
+                logName = logName,
+                logDate = Date(),
+                workoutPlanId = workoutPlanId,
+                exercises = exerciseLogs
             )
 
-
             try {
-                Firebase.firestore.collection("Users").document(userId)
-                    .collection("ExerciseLogs").add(logEntry)
-                Log.d("Save Log", "Log saved successfully")
-                fetchSavedLogs()
+                Firebase.firestore
+                    .collection("Users").document(userId)
+                    .collection("UserProfile").document(userId)
+                    .collection("TrainingLogs").add(logEntry)
+                Log.d("Save Log", "Training log saved successfully")
+                // Fetch logs again or update UI accordingly
             } catch (e: Exception) {
-                Log.e("Save Log", "Error saving log", e)
+                Log.e("Save Log", "Error saving training log", e)
             }
-
         }
     }
 
-    private val _savedLogs = MutableLiveData<List<ExerciseLog>>()
-    val savedLogs: LiveData<List<ExerciseLog>> = _savedLogs
+    private val _savedLogs = MutableLiveData<List<TrainingLog>>()
+    val savedLogs: LiveData<List<TrainingLog>> = _savedLogs
 
-    fun toggleLogDetails(logId: String) {
-        _savedLogs.value = _savedLogs.value?.map { log ->
-            if (log.logName == logId) log.copy(isDetailsVisible = !log.isDetailsVisible) else log
-        }
+
+    private val _isAddingNewLog = MutableLiveData<Boolean>(false)
+    val isAddingNewLog: LiveData<Boolean> = _isAddingNewLog
+
+    fun startAddingNewLog() {
+        _isAddingNewLog.value = true
     }
+
+    fun finishAddingNewLog() {
+        _isAddingNewLog.value = false
+        // Opcionalmente, recarregue os logs existentes
+        fetchSavedLogs()
+    }
+
+    fun toggleLogDetails(logName: String) {
+        val updatedLogs = _savedLogs.value?.map { log ->
+            if (log.logName == logName) {
+                // Log para depuração
+                Log.d("ToggleLogDetails", "Toggling visibility for log: $logName")
+                log.copy(isDetailsVisible = !log.isDetailsVisible)
+            } else {
+                log
+            }
+        }
+        _savedLogs.postValue(updatedLogs)
+    }
+
 
     fun fetchSavedLogs() {
         val userId = getCurrentUserId()
         viewModelScope.launch {
-            val logsList = mutableListOf<ExerciseLog>()
-            Firebase.firestore.collection("Users").document(userId)
-                .collection("ExerciseLogs")
+            val logsList = mutableListOf<TrainingLog>()
+            Firebase.firestore
+                .collection("Users").document(userId)
+                .collection("UserProfile").document(userId)
+                .collection("TrainingLogs")
                 .get()
                 .await()
                 .documents.forEach { document ->
-                    // Supondo que "logs" seja um campo do tipo lista dentro do documento
-                    val logs = document.get("logs") as? List<Map<String, Any>> ?: emptyList()
-                    logs.forEach { logMap ->
-                        val logDate = (logMap["logDate"] as? com.google.firebase.Timestamp)?.toDate() ?: java.util.Date()
-                        logsList.add(
-                            ExerciseLog(
-                                logName = document.getString("logName") ?: "",
-                                logDate = logDate,
-                                exerciseId = logMap["exerciseId"] as String,
-                                exerciseName = logMap["exerciseName"] as String,
-                                sets = (logMap["sets"] as Long).toInt(),
-                                reps = (logMap["reps"] as Long).toInt(),
-                                weight = (logMap["weight"] as Double).toFloat(),
-                                isDetailsVisible = false
-                            )
+                    val logName = document.getString("logName") ?: ""
+                    val logDate = (document.getTimestamp("logDate")?.toDate() ?: Date())
+                    val workoutPlanId = document.getString("workoutPlanId") ?: ""
+                    val exercisesList = document.get("exercises") as? List<Map<String, Any>> ?: emptyList()
+                    val exercisesDetails = exercisesList.map { exerciseMap ->
+                        ExerciseDetail(
+                            exerciseId = exerciseMap["exerciseId"] as? String ?: "",
+                            exerciseName = exerciseMap["exerciseName"] as? String ?: "",
+                            sets = (exerciseMap["sets"] as? Long)?.toInt() ?: 0,
+                            reps = (exerciseMap["reps"] as? Long)?.toInt() ?: 0,
+                            weight = (exerciseMap["weight"] as? Double)?.toFloat() ?: 0f
                         )
                     }
+                    logsList.add(
+                        TrainingLog(
+                            logName = logName,
+                            logDate = logDate,
+                            workoutPlanId = workoutPlanId,
+                            exercises = exercisesDetails,
+                            isDetailsVisible = false
+                        )
+                    )
                 }
             _savedLogs.value = logsList
         }
     }
-}
 
+
+
+// Deletar e editar logs
+
+    fun deleteLog(logName: String) {
+        val userId = getCurrentUserId()
+        viewModelScope.launch {
+            try {
+                val logsRef = Firebase.firestore.collection("Users").document(userId)
+                    .collection("ExerciseLogs")
+                val logToDelete =
+                    logsRef.whereEqualTo("logName", logName).get().await().documents.firstOrNull()
+                logToDelete?.let {
+                    logsRef.document(it.id).delete().await()
+                    fetchSavedLogs()
+                }
+            } catch (e: Exception) {
+                Log.e("DeleteLog", "Error deleting log", e)
+            }
+        }
+    }
+}
 
 
 //    fun uploadImageToFirebaseStorage(imageUri: Uri, onSuccess: (String) -> Unit) {

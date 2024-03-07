@@ -1,11 +1,13 @@
 package com.example.wellnessfusionapp
 
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,12 +15,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,9 +47,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.test.services.events.TimeStamp
 import com.example.wellnessfusionapp.Models.Exercise
-import com.example.wellnessfusionapp.Models.ExerciseLog
+import com.example.wellnessfusionapp.Models.ExerciseDetail
+import com.example.wellnessfusionapp.Models.TrainingLog
 import com.example.wellnessfusionapp.Models.WorkoutPlan
+import com.example.wellnessfusionapp.Navigation.BottomNavBar
 import com.example.wellnessfusionapp.ViewModels.MainViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -56,6 +65,7 @@ fun LogScreen(
 ) {
     val showDialog = remember { mutableStateOf(false) }
     var selectedWorkoutPlan by remember { mutableStateOf<WorkoutPlan?>(null) }
+    val isAddingNewLog by viewModel.isAddingNewLog.observeAsState(false)
 
     LaunchedEffect(key1 = true) {
         viewModel.fetchUserWorkoutPlans()
@@ -64,66 +74,66 @@ fun LogScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Logs, Keep Track Of Your Progression") },
+                title = { Text("Progression Logs") },
                 actions = {
-
-                }
+                    if (!isAddingNewLog) {
+                        IconButton(onClick = { showDialog.value = true }) {
+                            Icon(imageVector = Icons.Filled.Add, contentDescription = "Add")
+                        }
+                    }
+                },
             )
-        }
+        },
+        bottomBar = { BottomNavBar(navController = navController) }
     ) { paddingValues ->
         Surface(modifier = Modifier.padding(paddingValues)) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 25.dp),
+                    .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    if (selectedWorkoutPlan != null) {
-                        // Quando um plano de treino é selecionado, exibe o formulário de detalhes do log
-                        LogDetailsForm(
-                            workoutPlan = selectedWorkoutPlan!!,
-                            viewModel = viewModel,
-                            onLogSaved = {
-                                selectedWorkoutPlan = null
-                            })
-                    } else {
-                        // Se nenhum plano estiver selecionado, exibe um texto informativo
-                        Text(
-                            "Here you Select a Workout Plan to Log Your Progression.",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                    IconButton(onClick = { showDialog.value = true }) {
-                        Icon(imageVector = Icons.Filled.Add, contentDescription = "Add")
+                if (!isAddingNewLog) {
+                    // Exibir a lista de logs salvos apenas se não estiver adicionando um novo log
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        SavedLogsList(viewModel = viewModel)
                     }
                 }
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.Start
-                ) {
-                    SavedLogsList(viewModel = viewModel)
+
+                // Controle para iniciar a adição de um novo log ou mostrar o formulário de detalhes do log selecionado
+                if (selectedWorkoutPlan != null && isAddingNewLog) {
+                    // Quando um plano de treino é selecionado e está adicionando um novo log, exibe o formulário de detalhes do log
+                    LogDetailsForm(
+                        workoutPlan = selectedWorkoutPlan!!,
+                        viewModel = viewModel,
+                        onLogSaved = {
+                            selectedWorkoutPlan = null
+                            viewModel.finishAddingNewLog()
+                        })
+                } else if (!isAddingNewLog) {
+                    // Se nenhum plano estiver selecionado e não estiver adicionando um novo log, exibe um texto informativo
+                    Text(
+                        "Here you Select a Workout Plan to Log Your Progression.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
             }
         }
 
-
-        // A verificação showDialog.value agora é feita aqui, fora do Scaffold
-        if (showDialog.value) {
+        // Dialog para selecionar o plano de treino, visível apenas se não estiver no processo de adicionar um novo log
+        if (showDialog.value && !isAddingNewLog) {
             SelectWorkoutPlanDialog(
                 mainViewModel = viewModel,
                 onPlanSelected = { workoutPlan ->
                     selectedWorkoutPlan = workoutPlan
-                    showDialog.value = false // Fecha o diálogo após a seleção
+                    viewModel.startAddingNewLog()
+                    showDialog.value = false
                 },
-                onDismiss = { showDialog.value = false } // Fecha o diálogo se o usuário cancelar
+                onDismiss = { showDialog.value = false }
             )
         }
     }
@@ -146,96 +156,32 @@ fun SelectWorkoutPlanDialog(
             text = {
                 LazyColumn {
                     items(savedWorkouts) { workout ->
-                        Text(
-                            text = workout.planName,
-                            modifier = Modifier.clickable { onPlanSelected(workout) }
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(100.dp)
+                                .padding(10.dp)
+                                .background(MaterialTheme.colorScheme.background)
+                                .clickable { onPlanSelected(workout) }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(5.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(workout.planName, style = MaterialTheme.typography.titleLarge)
+                                Text(
+                                    "Exercises: ${workout.exercises.size}",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
                     }
                 }
             },
             confirmButton = {
                 Button(onClick = { onDismiss() }) {
-                    Text("Cancelar")
-                }
-            }
-        )
-    }
-}
-
-@Composable
-fun LogDetailsForm(workoutPlan: WorkoutPlan, viewModel: MainViewModel, onLogSaved: () -> Unit) {
-    var exercises by remember { mutableStateOf<List<Exercise>>(emptyList()) }
-    var exerciseLogs = remember { mutableStateListOf<ExerciseLog>() }
-
-    var isNameDialogVisible by remember { mutableStateOf(false) }
-    var logName by remember { mutableStateOf("") }
-
-    // Busca os detalhes dos exercícios quando o composable é montado
-    LaunchedEffect(workoutPlan.exercises) {
-        viewModel.fetchExercisesDetailsByIds(workoutPlan.exercises) { fetchedExercises ->
-            exercises = fetchedExercises
-            // Inicializa os logs com valores padrão para cada exercício
-            exerciseLogs.clear()
-            fetchedExercises.forEach { exercise ->
-                exerciseLogs.add(ExerciseLog("", logDate = java.util.Date(), exercise.id, exercise.name, 0, 0, 0f, false))
-            }
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(0.dp),
-        verticalArrangement = Arrangement.Top, horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-
-        Text(
-            "Log Details For: ${workoutPlan.planName}",
-            style = MaterialTheme.typography.titleLarge
-        )
-
-        exercises.forEachIndexed { index, exercise ->
-            ExerciseLogEntry(exercise = exercise, exerciseLog = exerciseLogs[index]) { updatedLog ->
-                // Atualiza o log específico baseado em mudanças no UI
-                exerciseLogs[index] = updatedLog
-            }
-        }
-
-        Button(onClick = {
-            isNameDialogVisible = true
-        }) {
-            Text("Save Log")
-        }
-    }
-    if (isNameDialogVisible) {
-        AlertDialog(
-            onDismissRequest = { isNameDialogVisible = false },
-            title = { Text("Name Your Log") },
-            text = {
-                TextField(
-                    value = logName,
-                    onValueChange = { logName = it },
-                    label = { Text("Log Name") }
-                )
-            },
-            confirmButton = {
-                Button(onClick = {
-                    // Agora, salva o log com o nome fornecido quando o botão dentro do diálogo é pressionado
-                    if (logName.isNotBlank()) {
-                        viewModel.saveExerciseLog(logName, workoutPlan.id, exerciseLogs.toList())
-                        isNameDialogVisible = false
-                        logName = "" // Limpar o nome do log para o próximo uso
-                        onLogSaved()
-                    } else {
-                        // Adicionar algum feedback para o usuário se o nome estiver vazio
-                    }
-                }) {
-                    Text("Save")
-                }
-            },
-            dismissButton = {
-                Button(onClick = { isNameDialogVisible = false }) {
                     Text("Cancel")
                 }
             }
@@ -244,17 +190,159 @@ fun LogDetailsForm(workoutPlan: WorkoutPlan, viewModel: MainViewModel, onLogSave
 }
 
 @Composable
-fun ExerciseLogEntry(
-    exercise: Exercise,
-    exerciseLog: ExerciseLog,
-    onLogUpdate: (ExerciseLog) -> Unit
+fun LogDetailsForm(
+    workoutPlan: WorkoutPlan,
+    viewModel: MainViewModel,
+    onLogSaved: () -> Unit
 ) {
-    var reps by remember { mutableStateOf(exerciseLog.reps.toFloat()) }
-    var sets by remember { mutableStateOf(exerciseLog.sets.toFloat()) }
-    var weightText by remember { mutableStateOf(exerciseLog.weight.toString()) }
+    var exercises by remember { mutableStateOf<List<Exercise>>(emptyList()) }
+    var exerciseDetails = remember { mutableStateListOf<ExerciseDetail>() }
+    var isNameDialogVisible by remember { mutableStateOf(false) }
+    var logName by remember { mutableStateOf("") }
+
+    LaunchedEffect(workoutPlan.exercises) {
+        viewModel.fetchExercisesDetailsByIds(workoutPlan.exercises) { fetchedExercises ->
+            exercises = fetchedExercises
+            exerciseDetails.clear()
+            fetchedExercises.forEach { exercise ->
+                exerciseDetails.add(ExerciseDetail(exercise.id, exercise.name))
+            }
+        }
+    }
 
     Column(
-        modifier = Modifier.padding(20.dp)
+        modifier = Modifier
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceEvenly
+
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                "Log Details For",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(16.dp)
+            )
+            Text(
+                workoutPlan.planName,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
+        Divider() // Adiciona um divisor entre os itens para melhor visualização
+
+        // Use LazyColumn for the list of exercises, agora com o modificador weight
+        LazyColumn(modifier = Modifier.weight(1f)) {
+            items(exerciseDetails) { detail ->
+                ExerciseDetailEntry(detail = detail) { updatedDetail ->
+                    val index =
+                        exerciseDetails.indexOfFirst { it.exerciseId == updatedDetail.exerciseId }
+                    if (index != -1) {
+                        exerciseDetails[index] = updatedDetail
+                    }
+                }
+            }
+        }
+
+        Divider()
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            IconButton(
+                onClick = { isNameDialogVisible = true },
+                modifier = Modifier
+                    .padding(0.dp)
+                    .width(40.dp)
+                    .height(40.dp)
+            ) {
+                Icon(
+                    modifier = Modifier
+                        .width(60.dp)
+                        .height(80.dp), imageVector = Icons.Filled.Done, contentDescription = "Save"
+                )
+            }
+            IconButton(
+                onClick = { onLogSaved() },
+                modifier = Modifier
+                    .padding(0.dp)
+                    .width(40.dp)
+                    .height(40.dp)
+            ) {
+                Icon(
+                    modifier = Modifier
+                        .width(60.dp)
+                        .height(80.dp),
+                    imageVector = Icons.Filled.Close,
+                    contentDescription = "Save"
+                )
+            }
+        }
+    }
+
+    if (isNameDialogVisible) {
+        NameLogDialog(
+            logName = logName,
+            onLogNameChange = { logName = it },
+            onConfirm = {
+                if (logName.isNotBlank()) {
+                    viewModel.saveExerciseLog(logName, workoutPlan.id, exerciseDetails)
+                    isNameDialogVisible = false
+                    logName = "" // Limpar o nome do log para o próximo uso
+                    onLogSaved()
+                }
+            },
+            onDismiss = { isNameDialogVisible = false }
+        )
+    }
+}
+
+@Composable
+fun NameLogDialog(
+    logName: String,
+    onLogNameChange: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Name Your Log") },
+        text = {
+            TextField(
+                value = logName,
+                onValueChange = onLogNameChange,
+                label = { Text("Log Name") }
+            )
+        },
+        confirmButton = {
+            Button(onClick = onConfirm) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+fun ExerciseDetailEntry(
+    detail: ExerciseDetail,
+    onDetailUpdate: (ExerciseDetail) -> Unit // Callback to handle updates
+) {
+    var reps by remember { mutableStateOf(detail.reps.toFloat()) }
+    var sets by remember { mutableStateOf(detail.sets.toFloat()) }
+    var weightText by remember { mutableStateOf(detail.weight.toString()) }
+
+    Column(
+        modifier = Modifier.padding(15.dp)
     ) {
         Row(
             modifier = Modifier
@@ -263,14 +351,14 @@ fun ExerciseLogEntry(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(exercise.name, style = MaterialTheme.typography.headlineLarge)
+            Text(detail.exerciseName, style = MaterialTheme.typography.headlineLarge)
             TextField(
                 value = weightText,
                 onValueChange = { newValue ->
                     weightText = newValue.filter { it.isDigit() || it == '.' }
-                    weightText.toFloatOrNull()?.let {
-                        onLogUpdate(exerciseLog.copy(weight = it))
-                    }
+                    val newWeight = weightText.toFloatOrNull()
+                        ?: detail.weight // Fallback to the current weight if conversion fails
+                    onDetailUpdate(detail.copy(weight = newWeight))
                 },
                 label = { Text("Weight: kg") },
                 singleLine = true,
@@ -285,58 +373,68 @@ fun ExerciseLogEntry(
                 .padding(0.dp)
                 .fillMaxWidth()
         ) {
-            Text("Sets ${sets.toInt()}")
+            Text("Sets: ${sets.toInt()}")
             Slider(value = sets, onValueChange = { newValue ->
                 sets = newValue
-                onLogUpdate(exerciseLog.copy(sets = sets.toInt()))
+                onDetailUpdate(detail.copy(sets = sets.toInt()))
             }, valueRange = 1f..10f, modifier = Modifier.padding(vertical = 8.dp))
 
-            Text("Reps ${reps.toInt()}")
+            Text("Reps: ${reps.toInt()}")
             Slider(value = reps, onValueChange = { newValue ->
                 reps = newValue
-                onLogUpdate(exerciseLog.copy(reps = reps.toInt()))
+                onDetailUpdate(detail.copy(reps = reps.toInt()))
             }, valueRange = 1f..20f, modifier = Modifier.padding(vertical = 8.dp))
         }
     }
+    Divider()
 }
 
 @Composable
 fun SavedLogsList(viewModel: MainViewModel) {
     val savedLogs by viewModel.savedLogs.observeAsState(initial = emptyList())
+
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
     ) {
         items(savedLogs) { log ->
-            LogItem(log, onLogClicked = {
-                viewModel.toggleLogDetails(log.logName) // Certifique-se de que você tem um ID único para cada log
-            })
+            LogItem(log = log, viewModel = viewModel) // Passando o log e o ViewModel para LogItem
+            Divider() // Adiciona um divisor entre os itens para melhor visualização
         }
     }
 }
 
 
 @Composable
-fun LogItem(log: ExerciseLog, onLogClicked: () -> Unit) {
+fun LogItem(log: TrainingLog, viewModel: MainViewModel) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
-    Row(modifier = Modifier
-        .clickable { onLogClicked() }
-        .padding(all = 8.dp) // Adiciona padding à Row para um design mais limpo
-        .fillMaxWidth(), // Certifica que a Row ocupa a largura máxima disponível
-        horizontalArrangement = Arrangement.SpaceBetween // Espaça os elementos uniformemente
-    ) {
-        Text(log.logName, style = MaterialTheme.typography.bodyMedium)
+    Column(modifier = Modifier.clickable { viewModel.toggleLogDetails(log.logName) }) {
+        Row(
+            modifier = Modifier
+                .padding(bottom = 20.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(log.logName, style = MaterialTheme.typography.headlineLarge)
+            Text(dateFormat.format(log.logDate), style = MaterialTheme.typography.bodyMedium)
+        }
 
-        Spacer(Modifier.width(16.dp)) // Espaço entre o nome do log e a data
-
-        Text(dateFormat.format(log.logDate), style = MaterialTheme.typography.bodyMedium)
-    }
-    if (log.isDetailsVisible) {
-        // Mostra os detalhes deste exercício
-        Text("Exercise: ${log.exerciseName}", style = MaterialTheme.typography.bodySmall)
-        Text("Sets: ${log.sets}", style = MaterialTheme.typography.bodySmall)
-        Text("Reps: ${log.reps}", style = MaterialTheme.typography.bodySmall)
-        Text("Weight: ${log.weight}kg", style = MaterialTheme.typography.bodySmall)
+        // Toggle visibility of log details
+        if (log.isDetailsVisible) {
+            log.exercises.forEach { exerciseDetail ->
+                Text(
+                    "Exercise: ${exerciseDetail.exerciseName}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Text("Sets: ${exerciseDetail.sets}", style = MaterialTheme.typography.bodySmall)
+                Text("Reps: ${exerciseDetail.reps}", style = MaterialTheme.typography.bodySmall)
+                Text(
+                    "Weight: ${exerciseDetail.weight}kg",
+                    style = MaterialTheme.typography.bodySmall
+                )
+                Divider(modifier = Modifier.padding(vertical = 4.dp)) // Optional: add a divider for clarity
+            }
+        }
     }
 }

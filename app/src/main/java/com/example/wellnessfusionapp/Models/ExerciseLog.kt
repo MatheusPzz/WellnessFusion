@@ -1,12 +1,19 @@
 package com.example.wellnessfusionapp.Models
 
-data class ExerciseLog(
+import java.util.Date
+
+data class TrainingLog(
     val logName: String,
-    val logDate: java.util.Date,
+    val logDate: Date,
+    val workoutPlanId: String,
+    val exercises: List<ExerciseDetail>,
+    val isDetailsVisible: Boolean = false
+)
+
+data class ExerciseDetail(
     val exerciseId: String,
     val exerciseName: String,
-    var sets: Int = 0,
-    var reps: Int = 0,
-    var weight: Float = 0f,
-    val isDetailsVisible: Boolean = false
+    val sets: Int = 0,
+    val reps: Int = 0,
+    val weight: Float = 0f
 )
