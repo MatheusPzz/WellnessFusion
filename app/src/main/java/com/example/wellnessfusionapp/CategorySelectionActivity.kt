@@ -46,13 +46,17 @@ import com.example.wellnessfusionapp.ViewModels.CategoryViewModel
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun PhysicalCategoryScreen(navController: NavController, viewModel: CategoryViewModel, title: String) {
+fun PhysicalCategoryScreen(
+    navController: NavController,
+    viewModel: CategoryViewModel,
+    title: String
+) {
     val context = LocalContext.current
     val categories = viewModel.physicalCategory.collectAsState().value
     Scaffold(
         topBar = {
             CustomTopBar(
-                title = title,
+                title = "Physical Categories",
                 navController = navController,
                 viewModel = viewModel,
                 actions = {
@@ -66,13 +70,13 @@ fun PhysicalCategoryScreen(navController: NavController, viewModel: CategoryView
             )
         },
         bottomBar = {
-            Column (
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
-            ){
+            ) {
                 Button(
                     onClick = {
                         val selectedCategories = viewModel.getSelectedCategoryIds()
@@ -86,7 +90,11 @@ fun PhysicalCategoryScreen(navController: NavController, viewModel: CategoryView
 
                             navController.navigate("exerciseSelection/$selectedCategoriesString")
                         } else {
-                            Toast.makeText(context, "Please select at least one category", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                "Please select at least one category",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
                 ) {
@@ -96,10 +104,16 @@ fun PhysicalCategoryScreen(navController: NavController, viewModel: CategoryView
         }
     )
     { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             // Introductory text above the categories
             Text(
-                text = "Category Selection",
+                text = "Target Muscles",
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier
                     .padding(30.dp)
@@ -107,7 +121,7 @@ fun PhysicalCategoryScreen(navController: NavController, viewModel: CategoryView
             )
 
             LazyVerticalGrid(
-                columns = GridCells.Fixed(1),
+                columns = GridCells.Fixed(2),
                 modifier = Modifier.padding(16.dp)
             ) {
                 items(categories.size) { index ->
@@ -138,7 +152,7 @@ fun ZenCategoryScreen(navController: NavController, viewModel: CategoryViewModel
     Scaffold(
         topBar = {
             CustomTopBar(
-                title = title,
+                title = "Zen Categories",
                 navController = navController,
                 viewModel = viewModel,
                 actions = {
@@ -152,13 +166,13 @@ fun ZenCategoryScreen(navController: NavController, viewModel: CategoryViewModel
             )
         },
         bottomBar = {
-            Column (
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
-            ){
+            ) {
                 Button(
                     onClick = {
                         val selectedCategories = viewModel.getSelectedCategoryIds()
@@ -174,7 +188,11 @@ fun ZenCategoryScreen(navController: NavController, viewModel: CategoryViewModel
                             navController.navigate("exerciseSelection/$selectedCategoriesString")
                         } else {
 
-                            Toast.makeText(context, "Please select at least one category", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                "Please select at least one category",
+                                Toast.LENGTH_SHORT
+                            ).show()
 
                         }
                     }
@@ -185,10 +203,16 @@ fun ZenCategoryScreen(navController: NavController, viewModel: CategoryViewModel
         }
     )
     { padding ->
-        Column(modifier = Modifier.padding(padding).fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             // Introductory text above the categories
             Text(
-                text = "Category Selection",
+                text = "Target Mental Health",
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier
                     .padding(30.dp)
@@ -217,9 +241,6 @@ fun ZenCategoryScreen(navController: NavController, viewModel: CategoryViewModel
         }
     }
 }
-
-
-
 
 
 @Composable

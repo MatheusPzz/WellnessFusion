@@ -140,38 +140,34 @@ class ExerciseSelectionViewModel @Inject constructor() : ViewModel() {
     /*salvando o plano de treino criado no firestore sob o perfil do usuario atual e navega para a tela "Home" em sucesso*/
     fun saveWorkoutPlan(navController: NavController, planName: String) {
         val userId = getCurrentUserId()
-        if (userId != null) {
-            val db = Firebase.firestore
-            val planDocument =
-                db.collection("Users").document(userId).collection("UserProfile").document(userId)
-                    .collection("WorkoutPlans").document()
+        val db = Firebase.firestore
+        val planDocument =
+            db.collection("Users").document(userId).collection("UserProfile").document(userId)
+                .collection("WorkoutPlans").document()
 
-            // Use the _selectedExercises.value directly for the current exercise selection
-            val exerciseData = _selectedExercises.value.map { exercise ->
-                exercise.id
-            }
-
-            val workoutPlan = hashMapOf(
-                "planName" to planName,
-                "exercises" to exerciseData, // Use the detailed exercise data here
-                "creationDate" to Timestamp.now(),
-                "workoutPlanId" to planDocument.id
-            )
-
-            planDocument.set(workoutPlan)
-                .addOnSuccessListener {
-                    Log.d(
-                        "Save Workout Plan",
-                        "Saving workout plan with exercise IDs: $exerciseData"
-                    )
-                    navController.navigate("home")
-                }
-                .addOnFailureListener { e ->
-                    Log.e("ExerciseSelectionVM", "Error saving workout plan: ${e.message}", e)
-                }
-        } else {
-            Log.e("ExerciseSelectionVM", "User is not logged in")
+        // Use the _selectedExercises.value directly for the current exercise selection
+        val exerciseData = _selectedExercises.value.map { exercise ->
+            exercise.id
         }
+
+        val workoutPlan = hashMapOf(
+            "planName" to planName,
+            "exercises" to exerciseData, // Use the detailed exercise data here
+            "creationDate" to Timestamp.now(),
+            "workoutPlanId" to planDocument.id
+        )
+
+        planDocument.set(workoutPlan)
+            .addOnSuccessListener {
+                Log.d(
+                    "Save Workout Plan",
+                    "Saving workout plan with exercise IDs: $exerciseData"
+                )
+                navController.navigate("home")
+            }
+            .addOnFailureListener { e ->
+                Log.e("ExerciseSelectionVM", "Error saving workout plan: ${e.message}", e)
+            }
     }
 
 

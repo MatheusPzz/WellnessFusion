@@ -13,8 +13,6 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -24,15 +22,19 @@ import javax.inject.Inject
 class GeneratedWorkoutViewModel @Inject constructor() : ViewModel() {
 
 
+
+
+    // variaveris para manter as listas de planos salvos pelo usuario
     val _savedWorkouts = MutableLiveData<List<WorkoutPlan>>()
     val savedWorkouts: LiveData<List<WorkoutPlan>> = _savedWorkouts
 
 
-    /*Buscando os treinos salvos no firebase*/
+    // Criando uma estancia para o usuario atual
 
     private fun getCurrentUserId(): String {
         return FirebaseAuth.getInstance().currentUser?.uid ?: ""
     }
+    /*Buscando os treinos salvos no firebase*/
 
     fun fetchSavedWorkouts() {
         viewModelScope.launch {
@@ -61,46 +63,56 @@ class GeneratedWorkoutViewModel @Inject constructor() : ViewModel() {
 
     /*Funcao para buscar os detalhes de cada exericio baseados nos seus ids salvos na criacao do treino*/
 
+
+
     private val _exercisesDetails = MutableLiveData<List<Exercise>>()
     val exercisesDetails: LiveData<List<Exercise>> = _exercisesDetails
 
-    suspend fun fetchExercisesDetails(exerciseIds: List<String>) {
-        Log.d("Fetch Exercise Details", "Fetching details for exercise IDs: $exerciseIds")
-        withContext(Dispatchers.IO) {
-            val db = FirebaseFirestore.getInstance()
+    //
+
+    fun fetchExercisesDetails(exerciseIds: List<String>, onComplete: (List<Exercise>) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                // Utilize o método .whereIn para buscar documentos que tenham um campo 'id' correspondente aos IDs na lista exerciseIds
+                val db = FirebaseFirestore.getInstance()
                 val querySnapshot = db.collection("Exercises")
                     .whereIn("id", exerciseIds)
                     .get()
                     .await()
 
                 val exercises = querySnapshot.documents.mapNotNull { document ->
-                    document.toObject(Exercise::class.java)?.also { exercise ->
-                        Log.d("Fetch Exercise Details", "Found exercise: ${exercise.name}")
-                    }
+                    document.toObject(Exercise::class.java)
                 }
 
+                // Chame o callback com a lista de exercícios obtida
                 withContext(Dispatchers.Main) {
-                    _exercisesDetails.value = exercises
-                    Log.d(
-                        "Workouts VM",
-                        "Exercises details fetched successfully: ${exercises.size}"
-                    )
+                    onComplete(exercises)
                 }
             } catch (e: Exception) {
-                Log.e("Workouts VM", "Error fetching exercises details", e)
+                Log.e("Fetch Exercise Details", "Error fetching exercises details", e)
+                // Pode ser uma boa ideia chamar o callback mesmo em caso de erro, possivelmente com uma lista vazia ou passando uma mensagem de erro.
+                withContext(Dispatchers.Main) {
+                    onComplete(emptyList())
+                }
             }
         }
-
     }
+
+
+
+
+
+
+
+
+
 
     // Tornando a tela de planos de exrcicio editavel
 
     fun deleteWorkoutPlan(workoutPlanId: String){
+        val userId = getCurrentUserId()
         val db = FirebaseFirestore.getInstance()
-        db.collection("Users").document(getCurrentUserId())
-            .collection("UserProfile").document(getCurrentUserId())
+        db.collection("Users").document(userId)
+            .collection("UserProfile").document(userId)
             .collection("WorkoutPlans").document(workoutPlanId)
             .delete()
             .addOnSuccessListener {
@@ -126,5 +138,8 @@ class GeneratedWorkoutViewModel @Inject constructor() : ViewModel() {
                 Log.e("Workouts VM", "Error trying to update the workout plan name", e)
             }
     }
+
+
+
 
 }

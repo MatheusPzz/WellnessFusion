@@ -37,23 +37,23 @@ fun LoginScreen(navController: NavController, onSuccess: () -> Unit) {
 
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(20.dp),
+            .fillMaxSize()
+            .padding(15.dp),
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
-        Column (
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Center
-        ){
+        ) {
 
-        Icon(
-            modifier = Modifier.size(100.dp),
-            imageVector = Icons.Default.Person,
-            contentDescription = "Person Icon"
-        )
+            Icon(
+                modifier = Modifier.size(100.dp),
+                imageVector = Icons.Default.Person,
+                contentDescription = "Person Icon"
+            )
 
         }
 
@@ -80,14 +80,20 @@ fun LoginScreen(navController: NavController, onSuccess: () -> Unit) {
                         contentDescription = "Login Image $page",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(260.dp), // Adjust the modifier as needed
+                            .height(200.dp), // Adjust the modifier as needed
                     )
                 }
             }
             Spacer(modifier = Modifier.height(30.dp))
 
-            }
-            // Add some space before the fields
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
 
             OutlinedTextField(
                 value = email,
@@ -111,9 +117,11 @@ fun LoginScreen(navController: NavController, onSuccess: () -> Unit) {
             Button(
                 onClick = {
                     if (email.isBlank() || password.isBlank()) {
-                        Toast.makeText(context,
+                        Toast.makeText(
+                            context,
                             "Please fill in all fields",
-                            Toast.LENGTH_SHORT).show()
+                            Toast.LENGTH_SHORT
+                        ).show()
                     } else {
                         signInWithEmail(
                             auth,
@@ -134,13 +142,7 @@ fun LoginScreen(navController: NavController, onSuccess: () -> Unit) {
             }
 
             // Error message display
-            if (errorMessage.isNotEmpty()) {
-                Text(
-                    text = errorMessage,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(10.dp)
-                )
-            }
+
 
             // Recover Password Function call
 
@@ -189,31 +191,37 @@ fun LoginScreen(navController: NavController, onSuccess: () -> Unit) {
                 Spacer(modifier = Modifier.height(8.dp))                            // Space between the error message and the button
             }
 
-            Spacer(modifier = Modifier.height(50.dp))                                // another spacer
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-
-
-                TextButton(                                                                     // Button that navigates to the sign up page
-                    onClick = { navController.navigate("signUp") },
-                ) {
-                    Text("Don`t have an account? Sign Up", color = MaterialTheme.colorScheme.primary)
-                }
-
-                TextButton(onClick = {
-                    isPasswordRecoveryDialogOpen = true
-                }) {                     // now we have a highlighted text link that triggers our password recovery dialog
-                    Text("Recover Password", color = MaterialTheme.colorScheme.primary)
-                }
-
+        }
+        Spacer(modifier = Modifier.height(10.dp))                                // another spacer
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (errorMessage.isNotEmpty()) {
+                Text(
+                    text = "Wrong Credentials! Please try again",
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(5.dp)
+                )
             }
+
+
+            TextButton(
+                // Button that navigates to the sign up page
+                onClick = { navController.navigate("signUp") },
+            ) {
+                Text("Don`t have an account? Sign Up", color = MaterialTheme.colorScheme.primary)
+            }
+
+            TextButton(onClick = {
+                isPasswordRecoveryDialogOpen = true
+            }) {                     // now we have a highlighted text link that triggers our password recovery dialog
+                Text("Recover Password", color = MaterialTheme.colorScheme.primary)
+            }
+
         }
     }
-
-
-
+}
 
 
 // Function to handle email and password sign-in
@@ -242,7 +250,9 @@ private fun signInWithEmail(
                         }
                     }
                     .addOnFailureListener { e ->
-                        onError(e.message ?: "An unknown error occurred while fetching user profile")
+                        onError(
+                            e.message ?: "An unknown error occurred while fetching user profile"
+                        )
 
                     }
             } else {

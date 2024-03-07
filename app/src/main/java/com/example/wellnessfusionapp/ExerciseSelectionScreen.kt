@@ -119,13 +119,24 @@ fun ExerciseSelection(
                                 onClick = {
                                     if (localPlanName.isNotEmpty()) {
                                         planName = localPlanName
-                                        exerciseSelectionViewModel.saveWorkoutPlan(navController, planName)
-                                        Toast.makeText(context, "Workout Plan Created", Toast.LENGTH_SHORT).show()
+                                        exerciseSelectionViewModel.saveWorkoutPlan(
+                                            navController,
+                                            planName
+                                        )
+                                        Toast.makeText(
+                                            context,
+                                            "Workout Plan Created",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                         showDialog = false
                                         viewModel.clearCategorySelections()
                                         exerciseSelectionViewModel.clearExerciseSelections()
                                     } else {
-                                        Toast.makeText(context, "Please enter a plan name", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(
+                                            context,
+                                            "Please enter a plan name",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                     }
                                 }
                             ) {
@@ -162,31 +173,29 @@ fun ExerciseSelection(
 fun ExerciseDetail(exercise: Exercise, viewModel: ExerciseSelectionViewModel) {
     val isSelected = remember { mutableStateOf(viewModel.isExerciseSelected(exercise)) }
 
-    Row(
+    Column(
         modifier = Modifier
             .padding(0.dp)
-            .fillMaxWidth(),
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .fillMaxWidth()
+            .height(300.dp),
+        horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.SpaceEvenly
     ) {
+
+        AsyncImage(
+            model = exercise.imageUrl,
+            contentDescription = "Exercise Image",
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+        )
+
+
         Column(
             modifier = Modifier
-        ) {
-            AsyncImage(
-                model = exercise.imageUrl,
-                contentDescription = "Exercise Image",
-                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
-                modifier = Modifier
-                    .width(170.dp)
-                    .height(300.dp)
-            )
-        }
-        Column(
-            modifier = Modifier
-                .padding(start = 10.dp)
-                .fillMaxHeight()
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.SpaceEvenly,
+                .fillMaxWidth()
+                .padding(15.dp),
+            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.Start
         ) {
             Text(text = exercise.name, style = MaterialTheme.typography.bodyLarge)
@@ -195,24 +204,25 @@ fun ExerciseDetail(exercise: Exercise, viewModel: ExerciseSelectionViewModel) {
                 text = exercise.description ?: "No description",
                 style = MaterialTheme.typography.bodyMedium
             )
-            Spacer(modifier = Modifier.padding(110.dp))
-            Column(
-                modifier = Modifier
-                    .padding(0.dp)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.Bottom,
-                horizontalAlignment = Alignment.End
-            ) {
-                Checkbox(
-                    checked = isSelected.value,
-                    onCheckedChange = {
-                        viewModel.toggleExerciseSelection(exercise)
-
-                        isSelected.value = viewModel.isExerciseSelected(exercise)
-                    }
-                )
-            }
         }
+    }
+
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(10.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.End
+    ) {
+        Checkbox(
+            checked = isSelected.value,
+            onCheckedChange = {
+                viewModel.toggleExerciseSelection(exercise)
+
+                isSelected.value = viewModel.isExerciseSelected(exercise)
+            }
+        )
     }
 
 }
@@ -228,8 +238,9 @@ fun ExpandableCard(
 
     Card(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(vertical = 10.dp)
+            .fillMaxWidth()
+            .fillMaxHeight()
+            .padding(10.dp)
     ) {
         Column(
             modifier = Modifier
@@ -287,7 +298,7 @@ fun CategoriesWithExercises(
     groupedExercises: Map<String, List<Exercise>>,
     viewModel: ExerciseSelectionViewModel
 ) {
-    LazyColumn(modifier = Modifier.padding(horizontal = 5.dp)) {
+    LazyColumn(modifier = Modifier.padding(horizontal = 6.dp)) {
         groupedExercises.forEach { (categoryName, exercises) ->
             item {
                 ExpandableCard(

@@ -2,14 +2,18 @@ package com.example.wellnessfusionapp.Navigation
 
 import ExerciseSelection
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.List
+import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -31,7 +35,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.example.wellnessfusionapp.HomeScreen
 import com.example.wellnessfusionapp.InstructionScreen
+import com.example.wellnessfusionapp.LogScreen
 import com.example.wellnessfusionapp.LoginScreen
+import com.example.wellnessfusionapp.Models.WorkoutPlan
 import com.example.wellnessfusionapp.PhysicalCategoryScreen
 import com.example.wellnessfusionapp.ProfileScreen
 import com.example.wellnessfusionapp.SettingsScreen
@@ -53,52 +59,32 @@ fun MainNavHost(
     startDestination: String,
     exerciseSelectionViewModel: ExerciseSelectionViewModel,
     generatedWorkoutViewModel: GeneratedWorkoutViewModel,
-    mainViewModel: MainViewModel
-
+    mainViewModel: MainViewModel,
+    exerciseId: String,
 ) {
-    NavHost(
-        navController = navController as NavHostController,
-        startDestination = startDestination
-    ) {
-        composable("login") {
-            // LoginScreen implementation
-            LoginScreen(navController = navController) {
-                // Navigate to the main content upon login success
-                navController.navigate("home") {
-
-                }
+    NavHost(navController = navController as NavHostController, startDestination = startDestination)
+    {
+        composable("login") { LoginScreen(navController = navController) {
+                navController.navigate("home") { popUpTo(navController.graph.findStartDestination().id) { saveState = true } }
             }
         }
         composable("signUp") { SignUpScreen(navController = navController) }
-        composable("home") { HomeScreen(navController, categoryViewModel) }
-
+        composable("home") { HomeScreen(navController, categoryViewModel, viewModel2 = mainViewModel, exerciseId = exerciseId) }
         composable("profile") { ProfileScreen(navController) }
-
-        composable("WorkoutPlans") {
-            WorkoutsScreen(
-                viewModel = generatedWorkoutViewModel,
-                navController = navController)
-        }
-
+        composable("logs") { LogScreen(navController, mainViewModel) }
+        composable("WorkoutPlans") { WorkoutsScreen(viewModel = generatedWorkoutViewModel, navController = navController) }
         composable("settings") { SettingsScreen(navController) }
-
         composable("physicalCategory") { PhysicalCategoryScreen(navController, categoryViewModel, title = String() ) }
         composable("zenCategory") { ZenCategoryScreen(navController, categoryViewModel, title = String()) }
-        composable(
-            route = "exerciseSelection/{selectedCategories}",
-            arguments = listOf(navArgument("selectedCategories") { type = NavType.StringType })
-        ) { backStackEntry ->
+        composable(route = "exerciseSelection/{selectedCategories}", arguments = listOf(navArgument("selectedCategories") { type = NavType.StringType }))
+        { backStackEntry ->
             // Extract the string of selected categories
             val selectedCategoriesString =
                 backStackEntry.arguments?.getString("selectedCategories") ?: ""
             // Optionally, convert the string back to a list if needed for your logic
             val selectedCategoriesList =
                 selectedCategoriesString.split(",").filter { it.isNotBlank() }
-            ExerciseSelection(
-                exerciseSelectionViewModel = exerciseSelectionViewModel,
-                navController = navController,
-                viewModel = categoryViewModel
-            )
+            ExerciseSelection(exerciseSelectionViewModel = exerciseSelectionViewModel, navController = navController, viewModel = categoryViewModel)
         }
         composable("instructions/{exerciseId}", arguments = listOf(navArgument("exerciseId") { type = NavType.StringType })) { backStackEntry ->
             val exerciseId = backStackEntry.arguments?.getString("exerciseId") ?: ""
@@ -123,9 +109,18 @@ fun MainNavHost(
                 Icons.Filled.Favorite,
                 Icons.Outlined.FavoriteBorder,
                 "WorkoutPlans"
-
             ),
-            NavigationItem("Home", Icons.Filled.Home, Icons.Outlined.Home, "home"),
+            NavigationItem(
+                "Home",
+                Icons.Filled.Home,
+                Icons.Outlined.Home,
+                "home"),
+            NavigationItem(
+                "Logs For User",
+                Icons.Filled.DateRange,
+                Icons.Outlined.DateRange,
+                "logs"
+            ),
             NavigationItem(
                 "Settings",
                 Icons.Filled.List,

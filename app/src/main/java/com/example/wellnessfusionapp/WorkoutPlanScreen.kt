@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -17,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -63,7 +65,7 @@ fun WorkoutsScreen(viewModel: GeneratedWorkoutViewModel, navController: NavContr
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Workouts") },)
+            TopAppBar(title = { Text("Workout Plans") },)
         },
         bottomBar = { BottomNavBar(navController) }
 
@@ -94,6 +96,8 @@ fun WorkoutsScreen(viewModel: GeneratedWorkoutViewModel, navController: NavContr
 fun EditButton(workoutPlanId: String, currentName: String, viewModel: GeneratedWorkoutViewModel) {
     var showDialog by remember { mutableStateOf(false) }
     var newName by remember { mutableStateOf(currentName) }
+    val exercises by remember { mutableStateOf(emptyList<Exercise>()) }
+
 
     IconButton(onClick = { showDialog = true }) {
         Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit Plan")
@@ -136,6 +140,13 @@ fun DeleteButton(workoutPlanId: String, viewModel: GeneratedWorkoutViewModel) {
     }
 }
 
+@Composable
+fun PlayButton(navController: NavController) {
+    IconButton(onClick = { navController.navigate("PlayWorkout") }) {
+        Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Play Workout Plan")
+    }
+}
+
 @OptIn(ExperimentalFoundationApi::class, ExperimentalPagerApi::class)
 @Composable
 fun WorkoutCard(
@@ -143,22 +154,27 @@ fun WorkoutCard(
     viewModel: GeneratedWorkoutViewModel,
     navController: NavController
 ) {
-    val exercisesDetails by viewModel.exercisesDetails.observeAsState(emptyList())
+    var exercisesDetails by remember { mutableStateOf<List<Exercise>>(listOf()) }
 
     LaunchedEffect(workout.exercises) {
-        viewModel.fetchExercisesDetails(workout.exercises)
+        viewModel.fetchExercisesDetails(workout.exercises) { exercises ->
+            exercisesDetails = exercises
+        }
     }
  //
     Card(modifier = Modifier.padding(15.dp)) {
         Column(modifier = Modifier.padding(0.dp)) {
-            Row(modifier = Modifier.fillMaxWidth().padding(10.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(text = workout.planName, style = MaterialTheme.typography.titleLarge)
                 Row {
+                    PlayButton(navController)
                     EditButton(workout.workoutPlanId, workout.planName, viewModel)
                     DeleteButton(workout.workoutPlanId, viewModel)
                 }
             }
-            Divider(modifier = Modifier.padding(vertical = 15.dp))
+            Divider(modifier = Modifier.padding(vertical = 10.dp))
 
             val pagerState = rememberPagerState()
             HorizontalPager(
@@ -192,51 +208,35 @@ fun ExercisePage(exercise: Exercise, navController: NavController) {
                 .height(160.dp)
                 .fillMaxWidth()
         )
-        Column(
-            modifier = Modifier
-                .padding(10.dp)
-                .fillMaxWidth()
-                .fillMaxHeight(),
-            verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.Start
-        ) {
-            Text(text = "Nome: ${exercise.name}", style = MaterialTheme.typography.bodyLarge)
-            Spacer(modifier = Modifier.height(5.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(),
-            )
-            {
-                Column(modifier = Modifier
-                    .width(250.dp)
-                    .fillMaxHeight()) {
-                    Text(
-                        text = "Descrição: ${exercise.description}",
-                        style = MaterialTheme.typography.bodyMedium
+        Column(modifier = Modifier
+            .padding(10.dp)
+            .fillMaxSize()) {
+
+            Column(
+
+            ) {
+                Text(text = "Nome: ${exercise.name}", style = MaterialTheme.typography.bodyLarge)
+            }
+            Row(modifier = Modifier
+                .padding(0.dp)
+                .fillMaxWidth()) {
+                Text(text = "Descrição: ${exercise.description}", style = MaterialTheme.typography.bodyMedium)
+                IconButton(modifier = Modifier
+                    .padding(start = 40.dp)
+                    .size(50.dp),
+                    onClick = { navController.navigate("instructions/${exercise.id}") }) {
+                    Icon(
+                        modifier = Modifier
+                            .size(80.dp),
+                        imageVector = Icons.Filled.Info,
+                        contentDescription = "Instructions For Exercise"
                     )
                 }
-                Column(
-                    modifier = Modifier
-                        .width(100.dp)
-                        .fillMaxHeight(),
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    IconButton(modifier = Modifier
-                        .padding(start = 0.dp)
-                        .size(100.dp),
-                        onClick = { navController.navigate("instructions/${exercise.id}") }) {
-                        Icon(
-                            modifier = Modifier
-                                .size(80.dp),
-                            imageVector = Icons.Filled.PlayArrow,
-                            contentDescription = "Play Exercise"
-
-                        )
-                    }
-                }
             }
+
         }
-
-
     }
 }
+
+
+

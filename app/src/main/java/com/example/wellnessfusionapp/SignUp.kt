@@ -40,6 +40,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.example.wellnessfusionapp.Models.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -226,7 +227,11 @@ private fun registerUser(
                     snackBarHostState.showSnackbar("Profile created successfully")
                 }
                 navController.navigate("login") {
-                    popUpTo(0) { inclusive = true }
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
                 }
             }, { errMsg ->
                 // Error callback
