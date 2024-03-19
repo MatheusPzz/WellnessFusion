@@ -36,7 +36,7 @@ class MainActivity : ComponentActivity() {
 
                 val startDestination = if (authState != null) "home" else "login"
 
-                MainNavHost(navController, CategoryViewModel(), startDestination, ExerciseSelectionViewModel(), GeneratedWorkoutViewModel(), MainViewModel(), "")
+                MainNavHost(navController, CategoryViewModel(), startDestination, ExerciseSelectionViewModel(), GeneratedWorkoutViewModel(), MainViewModel(), "", "", emptyList())
             }
         }
     }

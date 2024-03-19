@@ -11,39 +11,32 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.example.wellnessfusionapp.Navigation.BottomNavBar
-import com.example.wellnessfusionapp.Navigation.MainTopBar
 import kotlinx.coroutines.launch
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@Composable
-fun SettingsScreen(navController: NavController) {
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
-    Scaffold(
-        topBar = { MainTopBar(
-
-            title = "Wellness Fusion",
-            navController = navController,
-            onMenuClick = {scope.launch {
-                if (drawerState.isClosed){
-                    drawerState.open()
-                }else {
-                    drawerState.close()
-                }
-            }}
-        )
-        },
-        bottomBar = { BottomNavBar(navController) }
-    ){
-        AppModalNavigationDrawer(
-            drawerState = drawerState,
-            scope = scope,
-            navController = navController
-        ) { innerPadding ->
-            // Your screen content here, considering innerPadding to avoid overlap
-            Column(modifier = Modifier.padding(innerPadding)) {
-                // Your screen content
-            }
-        }
-    }
-}
+//@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+//@Composable
+//fun SettingsScreen(navController: NavController) {
+//    val drawerState = rememberDrawerState(DrawerValue.Closed)
+//    val scope = rememberCoroutineScope()
+//    Scaffold(
+//        topBar = { MainTopBar(
+//
+//            title = "Wellness Fusion",
+//            navController = navController,
+//            userName = "User",
+//        )
+//        },
+//        bottomBar = { BottomNavBar(navController) }
+//    ){
+//        AppModalNavigationDrawer(
+//            drawerState = drawerState,
+//            scope = scope,
+//            navController = navController
+//        ) { innerPadding ->
+//            // Your screen content here, considering innerPadding to avoid overlap
+//            Column(modifier = Modifier.padding(innerPadding)) {
+//                // Your screen content
+//            }
+//        }
+//    }
+//}

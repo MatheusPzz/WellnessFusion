@@ -2,17 +2,16 @@ package com.example.wellnessfusionapp
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -56,7 +55,7 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WorkoutsScreen(viewModel: GeneratedWorkoutViewModel, navController: NavController) {
+fun SavedWorkoutsScreen(viewModel: GeneratedWorkoutViewModel, navController: NavController) {
     val savedWorkouts by viewModel.savedWorkouts.observeAsState(listOf())
 
     LaunchedEffect(Unit) {
@@ -65,12 +64,11 @@ fun WorkoutsScreen(viewModel: GeneratedWorkoutViewModel, navController: NavContr
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Workout Plans") },)
+            TopAppBar(title = { Text("Workout Plans") })
         },
         bottomBar = { BottomNavBar(navController) }
 
-    ) {
-        paddingValues ->
+    ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
@@ -87,7 +85,6 @@ fun WorkoutsScreen(viewModel: GeneratedWorkoutViewModel, navController: NavContr
 }
 
 // edicao
-
 
 
 // edicao
@@ -161,12 +158,16 @@ fun WorkoutCard(
             exercisesDetails = exercises
         }
     }
- //
-    Card(modifier = Modifier.padding(15.dp)) {
+    //
+    Card(modifier = Modifier
+        .padding(15.dp)
+        .clickable { navController.navigate("createdPlans/${workout.workoutPlanId}") }) {
         Column(modifier = Modifier.padding(0.dp)) {
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 Text(text = workout.planName, style = MaterialTheme.typography.titleLarge)
                 Row {
                     PlayButton(navController)
@@ -208,19 +209,26 @@ fun ExercisePage(exercise: Exercise, navController: NavController) {
                 .height(160.dp)
                 .fillMaxWidth()
         )
-        Column(modifier = Modifier
-            .padding(10.dp)
-            .fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .padding(10.dp)
+                .fillMaxSize()
+        ) {
 
             Column(
 
             ) {
                 Text(text = "Nome: ${exercise.name}", style = MaterialTheme.typography.bodyLarge)
             }
-            Row(modifier = Modifier
-                .padding(0.dp)
-                .fillMaxWidth()) {
-                Text(text = "Descrição: ${exercise.description}", style = MaterialTheme.typography.bodyMedium)
+            Row(
+                modifier = Modifier
+                    .padding(0.dp)
+                    .fillMaxWidth()
+            ) {
+                Text(
+                    text = "Descrição: ${exercise.description}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
                 IconButton(modifier = Modifier
                     .padding(start = 40.dp)
                     .size(50.dp),

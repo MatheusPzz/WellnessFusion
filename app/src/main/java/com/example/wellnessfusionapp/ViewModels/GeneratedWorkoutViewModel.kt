@@ -22,8 +22,6 @@ import javax.inject.Inject
 class GeneratedWorkoutViewModel @Inject constructor() : ViewModel() {
 
 
-
-
     // variaveris para manter as listas de planos salvos pelo usuario
     val _savedWorkouts = MutableLiveData<List<WorkoutPlan>>()
     val savedWorkouts: LiveData<List<WorkoutPlan>> = _savedWorkouts
@@ -97,13 +95,21 @@ class GeneratedWorkoutViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    private val _workoutPlan = MutableLiveData<WorkoutPlan?>()
+    val workoutPlan: MutableLiveData<WorkoutPlan?> = _workoutPlan
 
-
-
-
-
-
-
+    fun fetchWorkoutPlanById(workoutPlanId: String) {
+        viewModelScope.launch {
+            val db = FirebaseFirestore.getInstance()
+            val documentSnapshot = db.collection("Users").document(getCurrentUserId())
+                .collection("UserProfile").document(getCurrentUserId())
+                .collection("WorkoutPlans").document(workoutPlanId)
+                .get()
+                .await()
+            val workoutPlan = documentSnapshot.toObject(WorkoutPlan::class.java)
+            _workoutPlan.value = workoutPlan
+        }
+    }
 
 
     // Tornando a tela de planos de exrcicio editavel
@@ -138,6 +144,7 @@ class GeneratedWorkoutViewModel @Inject constructor() : ViewModel() {
                 Log.e("Workouts VM", "Error trying to update the workout plan name", e)
             }
     }
+
 
 
 

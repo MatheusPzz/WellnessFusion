@@ -10,5 +10,6 @@ data class Exercise(
     val videoUrl: String? = null,
     val imageUrl: String? = null,
     val isSelected : Boolean = false,
-    val id : String = ""
+    val id : String = "",
+    val weight: String = ""
     )

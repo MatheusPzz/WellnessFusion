@@ -88,8 +88,11 @@ fun PhysicalCategoryScreen(
                                 "Navigating to exerciseSelection with categories: $selectedCategoriesString"
                             )
 
-                            navController.navigate("exerciseSelection/$selectedCategoriesString")
-                        } else {
+                            navController.navigate("exerciseSelection/$selectedCategoriesString") {
+                                // Adjust these parameters based on your navigation structure and needs
+                                popUpTo("home") { saveState = false } // Adjust the "home" route as needed
+                                launchSingleTop = true
+                            }                        } else {
                             Toast.makeText(
                                 context,
                                 "Please select at least one category",
@@ -185,7 +188,11 @@ fun ZenCategoryScreen(navController: NavController, viewModel: CategoryViewModel
                                 "Navigating to exerciseSelection with categories: $selectedCategoriesString"
                             )
 
-                            navController.navigate("exerciseSelection/$selectedCategoriesString")
+                            navController.navigate("exerciseSelection/$selectedCategoriesString") {
+                                // Adjust these parameters based on your navigation structure and needs
+                                popUpTo("home") { saveState = false } // Adjust the "home" route as needed
+                                launchSingleTop = true
+                            }
                         } else {
 
                             Toast.makeText(

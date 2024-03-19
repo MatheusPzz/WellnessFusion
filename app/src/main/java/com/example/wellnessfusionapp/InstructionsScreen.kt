@@ -57,7 +57,6 @@ fun InstructionScreen(exerciseId: String, viewModel: MainViewModel, navControlle
 
     LaunchedEffect(exerciseId) {
         viewModel.fetchInstructionsForExercise(exerciseId)
-        viewModel.fetchNotesForUser(exerciseId)
     }
 
     instructions.value?.let { instruction ->

@@ -9,6 +9,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.example.wellnessfusionapp.Models.Category
 import com.example.wellnessfusionapp.Models.Exercise
 import com.google.firebase.Timestamp
@@ -145,25 +146,27 @@ class ExerciseSelectionViewModel @Inject constructor() : ViewModel() {
             db.collection("Users").document(userId).collection("UserProfile").document(userId)
                 .collection("WorkoutPlans").document()
 
-        // Use the _selectedExercises.value directly for the current exercise selection
         val exerciseData = _selectedExercises.value.map { exercise ->
             exercise.id
         }
 
         val workoutPlan = hashMapOf(
             "planName" to planName,
-            "exercises" to exerciseData, // Use the detailed exercise data here
+            "exercises" to exerciseData,
             "creationDate" to Timestamp.now(),
             "workoutPlanId" to planDocument.id
         )
 
         planDocument.set(workoutPlan)
             .addOnSuccessListener {
-                Log.d(
-                    "Save Workout Plan",
-                    "Saving workout plan with exercise IDs: $exerciseData"
-                )
-                navController.navigate("home")
+                Log.d("Save Workout Plan", "Saving workout plan with exercise IDs: $exerciseData")
+                // Correctly clearing the back stack upon navigating to the createdPlans screen
+                navController.navigate("createdPlans/${planDocument.id}") {
+                    // Clearing back stack up to the root (assuming "home" is the startDestination)
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        inclusive = true // Clears the entire back stack including the start destination
+                    }
+                }
             }
             .addOnFailureListener { e ->
                 Log.e("ExerciseSelectionVM", "Error saving workout plan: ${e.message}", e)

@@ -1,0 +1,260 @@
+package com.example.wellnessfusionapp
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.example.wellnessfusionapp.Models.Goal
+import com.example.wellnessfusionapp.ViewModels.MainViewModel
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.KeyboardType
+import com.example.wellnessfusionapp.Models.Exercise
+import com.example.wellnessfusionapp.Models.GoalType
+import com.google.firebase.Timestamp
+import java.util.UUID
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GoalScreen(navController: NavController, viewModel: MainViewModel) {
+    val predefinedGoalTypes = listOf("Exercising Weight Progress", "Exercising Days Goal")
+    var selectedGoalType by remember { mutableStateOf<String?>(null) }
+
+    Scaffold(topBar = { GoalScreenTopAppBar(navController) }) { innerPadding ->
+        Surface(modifier = Modifier.padding(innerPadding)) {
+            GoalScreenContent(
+                predefinedGoalTypes = predefinedGoalTypes,
+                selectedGoalType = selectedGoalType,
+                onGoalTypeSelected = { selectedGoalType = it },
+                viewModel = viewModel,
+                onGoalAdded = { selectedGoalType = null },
+                navController = navController
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GoalScreenTopAppBar(navController: NavController) {
+    TopAppBar(
+        title = { Text("Set Your Goals") },
+        navigationIcon = {
+            IconButton(onClick = { navController.navigateUp() }) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+            }
+        }
+    )
+}
+
+@Composable
+fun GoalScreenContent(
+    predefinedGoalTypes: List<String>,
+    selectedGoalType: String?,
+    onGoalTypeSelected: (String) -> Unit,
+    viewModel: MainViewModel,
+    onGoalAdded: () -> Unit,
+    navController: NavController
+) {
+    if (selectedGoalType != null) {
+        GoalDetailScreen(
+            viewModel = viewModel,
+            goalType = selectedGoalType,
+            onGoalAdded = onGoalAdded,
+            navController = navController
+        )
+    } else {
+        GoalSelectionList(predefinedGoalTypes, onGoalTypeSelected)
+    }
+}
+
+@Composable
+fun GoalSelectionList(predefinedGoalTypes: List<String>, onGoalTypeSelected: (String) -> Unit) {
+    LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
+        items(predefinedGoalTypes) { goalType ->
+            GoalTypeItem(goalType = goalType, onGoalTypeSelected = onGoalTypeSelected)
+        }
+    }
+}
+
+@Composable
+fun GoalTypeItem(goalType: String, onGoalTypeSelected: (String) -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onGoalTypeSelected(goalType) }
+            .padding(8.dp)
+    ) {
+        Text(text = goalType, style = MaterialTheme.typography.bodyMedium)
+        Spacer(modifier = Modifier.height(8.dp))
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GoalDetailScreen(
+    viewModel: MainViewModel,
+    goalType: String,
+    onGoalAdded: () -> Unit,
+    navController: NavController
+) {
+    LaunchedEffect(key1 = true) {
+        viewModel.fetchAllExercises()
+    }
+
+    val exercises by viewModel.exercisesForDropdown.observeAsState(emptyList())
+    var selectedExercise by remember { mutableStateOf<Exercise?>(null) }
+    var currentValue by remember { mutableStateOf("") }
+    var desiredValue by remember { mutableStateOf("") }
+    var expanded by remember { mutableStateOf(false) }
+    val startDate by remember { mutableStateOf(Timestamp.now()) }
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text("Goal Type: $goalType", style = MaterialTheme.typography.headlineSmall)
+
+        if (goalType == "Exercising Days Goal") {
+            // Render text fields specific to attendance goals
+
+            OutlinedTextField(
+                value = desiredValue,
+                onValueChange = { desiredValue = it },
+                label = { Text("How Many Days: ") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = startDate.toDate().toString(),
+                onValueChange = { },
+                readOnly = true,
+                label = { Text("Start Date") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+        } else {
+            // Render text fields specific to other goal types
+            OutlinedTextField(
+                value = selectedExercise?.name ?: "Select Exercise",
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = {
+                    IconButton(onClick = { expanded = !expanded }) {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    }
+                },
+                label = { Text("Exercise") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                exercises.forEach { exercise ->
+                    DropdownMenuItem(
+                        onClick = {
+                            selectedExercise = exercise
+                            expanded = false
+                        },
+                        text = { Text(exercise.name) }
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        if (goalType != "Exercising Days Goal") {
+            // Render text fields specific to other goal types
+            OutlinedTextField(
+                value = currentValue,
+                onValueChange = { currentValue = it },
+                label = { Text("Current Value: KG") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = desiredValue,
+                onValueChange = { desiredValue = it },
+                label = { Text("Desired Value: KG") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        Button(onClick = {
+            if (goalType == "Exercising Days Goal" && desiredValue.isNotEmpty()) {
+                println("Attendance goal: $desiredValue days")
+                val newGoal = Goal(
+                    id = UUID.randomUUID().toString(),
+                    type = GoalType(goalType, ""), // Create GoalType instance
+                    description = "Attendance goal",
+                    desiredValue = desiredValue.toInt(),
+                    currentValue = 0,
+                    exerciseId = null,
+                    startDate = Timestamp.now(),
+                    endDate = null,
+                    status = "active",
+                    workoutDays = null
+                )
+                viewModel.addGoal(newGoal)
+                onGoalAdded()
+                navController.popBackStack()
+            } else if (goalType == "Exercising Weight Progress" && selectedExercise != null && currentValue.isNotEmpty() && desiredValue.isNotEmpty()) {
+                // Handle other goal types
+                val newGoal = Goal(
+                    id = UUID.randomUUID().toString(),
+                    type = GoalType(goalType, ""), // Create GoalType instance
+                    description = selectedExercise!!.name,
+                    desiredValue = desiredValue.toInt(),
+                    currentValue = currentValue.toInt(),
+                    exerciseId = selectedExercise!!.id ?: "",
+                    startDate = Timestamp.now(),
+                    endDate = null,
+                    status = "active",
+                    workoutDays = null
+                )
+
+                viewModel.addGoal(newGoal)
+                onGoalAdded()
+                navController.popBackStack()
+            }
+        }) {
+            Text("Add Goal")
+        }
+    }
+}
+
