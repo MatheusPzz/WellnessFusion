@@ -2,8 +2,11 @@ import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -47,17 +50,29 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
 import coil.request.ImageRequest
+import com.example.wellnessfusionapp.R
 
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -82,7 +97,7 @@ fun ExerciseSelection(
                         viewModel.clearCategorySelections()
                         navController.navigateUp()
                     }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -184,25 +199,25 @@ fun ExerciseDetail(exercise: Exercise, viewModel: ExerciseSelectionViewModel) {
         AsyncImage(
             model = exercise.imageUrl,
             contentDescription = "Exercise Image",
-            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
+                .height(210.dp)
         )
-
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(15.dp),
+                .padding(10.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.Start
         ) {
-            Text(text = exercise.name, style = MaterialTheme.typography.bodyLarge)
+            Text(text = exercise.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = Color.White)
             Spacer(modifier = Modifier.padding(5.dp))
             Text(
                 text = exercise.description ?: "No description",
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold, color = Color.White
             )
         }
     }
@@ -211,17 +226,24 @@ fun ExerciseDetail(exercise: Exercise, viewModel: ExerciseSelectionViewModel) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .height(30.dp)
             .padding(10.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.End
     ) {
         Checkbox(
+            modifier = Modifier.height(50.dp),
+            colors = CheckboxDefaults.colors(
+                checkedColor = Color.Blue,
+                uncheckedColor = Color.White
+            ),
             checked = isSelected.value,
             onCheckedChange = {
                 viewModel.toggleExerciseSelection(exercise)
 
                 isSelected.value = viewModel.isExerciseSelected(exercise)
-            }
+            },
+
         )
     }
 
@@ -239,42 +261,78 @@ fun ExpandableCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight()
-            .padding(10.dp)
+            .padding(5.dp)
+            .shadow(5.dp)
+            .alpha(0.9f),
+        colors = CardColors(
+            Color.Black,
+            Color.Black,
+            Color.Black,
+            Color.Black
+        )
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .padding(15.dp)
                 .fillMaxWidth()
+                .padding(0.dp),
         ) {
-            Text(
-                text = categoryName,
-                style = MaterialTheme.typography.titleLarge
-            )
-            AnimatedVisibility(visible = isExpanded) {
+            Box() {
+
+                Image(
+                    painter = painterResource(id = R.drawable.gaming),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(132.dp),
+                    contentScale = ContentScale.Crop
+                )
+                // Conteúdo do Card
                 Column(
                     modifier = Modifier
-                        .padding(top = 10.dp)
                         .fillMaxWidth()
+                        .align(Alignment.BottomStart) // Alinha o conteúdo ao fundo (ajuste conforme necessário)
                 ) {
-                    exercises.forEach { exercise ->
-                        Divider(Modifier.padding(vertical = 15.dp))
-                        ExerciseDetail(exercise = exercise, viewModel = viewModel)
+                    Column(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            text = categoryName,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = Color.White,
+                            fontWeight = FontWeight(700),
+                            modifier = Modifier.padding(bottom = 8.dp) // Espaçamento para legibilidade
+                        )
+                        HorizontalDivider()
                     }
+                    Spacer(modifier = Modifier.padding(16.dp))
+                    AnimatedVisibility(visible = isExpanded) {
+                        Column(
+                            modifier = Modifier
+                                .padding(top = 8.dp)
+                                .fillMaxWidth()
+                        ) {
+                            exercises.forEach { exercise ->
+                                Spacer(modifier = Modifier.padding(bottom = 16.dp))
+                                ExerciseDetail(exercise = exercise, viewModel = viewModel)
+                            }
+                        }
+                    }
+                    // Ícone para expandir/recolher
+                    Icon(
+                        imageVector = if (isExpanded) Icons.Filled.ArrowDropDown else Icons.Filled.ArrowDropDown,
+                        contentDescription = if (isExpanded) "Collapse" else "Expand",
+                        modifier = Modifier
+                            .size(30.dp)
+                            .align(Alignment.End) // Alinha o ícone ao fim da coluna
+                            .clickable { isExpanded = !isExpanded },
+                    )
                 }
             }
         }
-        Icon(
-            imageVector = if (isExpanded) Icons.Filled.ArrowDropDown else Icons.Filled.ArrowDropDown,
-            contentDescription = if (isExpanded) "Collapse" else "Expand",
-            modifier = Modifier
-                .size(80.dp)
-                .align(Alignment.End)
-                .clickable { isExpanded = !isExpanded }
-        )
     }
 }
-
 
 // This is a list of categories with exercises inside
 
@@ -316,7 +374,7 @@ fun ExerciseCard(exercise: Exercise) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(4.dp),
+            .padding(2.dp),
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
             Text(text = exercise.categoryName, style = MaterialTheme.typography.bodyMedium)

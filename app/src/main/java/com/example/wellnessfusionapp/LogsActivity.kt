@@ -2,6 +2,9 @@
 
 package com.example.wellnessfusionapp
 
+import android.annotation.SuppressLint
+import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,35 +25,54 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.Icons.Filled
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -62,6 +84,8 @@ import com.example.wellnessfusionapp.Models.TrainingLog
 import com.example.wellnessfusionapp.Models.WorkoutPlan
 import com.example.wellnessfusionapp.Navigation.BottomNavBar
 import com.example.wellnessfusionapp.ViewModels.MainViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -76,17 +100,28 @@ fun LogScreen(
     val showAddGoalDialog = remember { mutableStateOf(false) }
     var selectedWorkoutPlans by remember { mutableStateOf<List<WorkoutPlan>>(emptyList()) }
     val isAddingNewLog by viewModel.isAddingNewLog.observeAsState(false)
-
-
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val fontText = FontFamily(
+        Font(R.font.zendots_regular),
+    )
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Training Record") },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.Black
+                ),
+                title = { Text("Training Record", color = Color.White) },
                 actions = {
                     if (!isAddingNewLog) {
                         IconButton(onClick = { showDialog.value = true }) {
-                            Icon(imageVector = Filled.Add, contentDescription = "Add Log")
+                            Icon(
+                                imageVector = Filled.Add,
+                                contentDescription = "Add Log",
+                                tint = Color.White
+                            )
                         }
                     }
                 },
@@ -94,30 +129,58 @@ fun LogScreen(
         },
         bottomBar = { BottomNavBar(navController = navController) }
     ) { paddingValues ->
-        Surface(modifier = Modifier.padding(paddingValues)) {
+        Surface(modifier = Modifier.padding(paddingValues))
+
+        {
+//            Image(
+//                painter = painterResource(id = R.drawable.backgroundhome),
+//                contentDescription = "Physical",
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(paddingValues)
+//                    .scale(1.5f)
+//                    .alpha(0.8f)
+//                    .blur(1.dp)
+//            )
             Column(
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-                Text(
-                    "Add personal goals to keep track of your progress.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    items(goals) { goal ->
-                        GoalMiniCard(goal = goal) // Assuming GoalMiniCard is a composable you've defined
-                    }
-                    item {
-                        IconButton(onClick = { navController.navigate("goalScreen") }) {
-                            Icon(imageVector = Icons.Default.Add, contentDescription = "Add Goal")
-                            Text("Add Goal", modifier = Modifier.padding(start = 8.dp))
-                        }
+                    Text(
+                        "Current Goals",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color(0xffFE7316),
+                        fontFamily = fontText
+                    )
+                    IconButton(onClick = { navController.navigate("goalScreen") }) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = "Add Goal")
                     }
                 }
+                HorizontalDivider(Modifier.padding(16.dp))
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(end = 6.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        TextButton(onClick = { navController.navigate("AchievedGoals") }) {
+                            Text("See All Achieved Goals")
+                        }
+                    }
+                    Goals(viewModel, navController)
+                }
+
                 // This part is for the saved logs list
                 if (!isAddingNewLog) {
                     Column(
@@ -130,21 +193,18 @@ fun LogScreen(
                     }
                 }
 
-                if (selectedWorkoutPlans.isNotEmpty() && isAddingNewLog) {
-                    LogDetailsForm(
-                        workoutPlans = selectedWorkoutPlans,
-                        viewModel = viewModel,
-                        onLogSaved = {
-                            selectedWorkoutPlans = emptyList()
-                            viewModel.finishAddingNewLog()
-                        }
-                    )
-                } else if (!isAddingNewLog) {
-                    Text(
-                        "Here you can select workout plans to log your progression.",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
+//                if (selectedWorkoutPlans.isNotEmpty() && isAddingNewLog) {
+//                    LogDetailsForm(
+//                        workoutPlans = selectedWorkoutPlans,
+//                        viewModel = viewModel,
+//                        onLogSaved = {
+//                            selectedWorkoutPlans = emptyList()
+//                            viewModel.finishAddingNewLog()
+//                        }
+//                    )
+//                } else if (!isAddingNewLog) {
+////                    SavedLogsList(viewModel = viewModel)
+//                }
             }
 
             if (showDialog.value && !isAddingNewLog) {
@@ -157,6 +217,60 @@ fun LogScreen(
                     },
                     onDismiss = { showDialog.value = false }
                 )
+            }
+        }
+        GoalCompletionNotification(viewModel = MainViewModel(), snackbarHostState, scope)
+    }
+}
+
+
+@Composable
+fun Goals(viewModel: MainViewModel, navController: NavController) {
+    val goals by viewModel.goals.observeAsState(initial = emptyList())
+    var goalToUpdate by remember { mutableStateOf<Goal?>(null) }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(14.dp)
+            .alpha(0.9f),
+        colors = CardColors(
+            Color.Black,
+            Color.Black,
+            Color.Black,
+            Color.Black
+        )
+
+
+    ) {
+        LazyRow {
+            items(goals) { goal ->
+                GoalItem(
+                    goal = goal,
+                    navController = navController,
+                    onUpdateClick = { goalToUpdate = it }
+                )
+            }
+        }
+    }
+}
+
+
+@Composable
+fun GoalCompletionNotification(
+    viewModel: MainViewModel,
+    snackbarHostState: SnackbarHostState,
+    scope: CoroutineScope
+) {
+    val goalCompletionEvent by viewModel.goalCompletionEvent.observeAsState()
+
+    LaunchedEffect(goalCompletionEvent) {
+        goalCompletionEvent?.let { goal ->
+            scope.launch {
+                snackbarHostState.showSnackbar(
+                    message = "Parabéns, sua meta '${goal.description}' foi alcançada com sucesso!"
+                )
+                viewModel.clearGoalCompletionEvent()
             }
         }
     }
@@ -208,12 +322,15 @@ fun GoalMiniCard(goal: Goal) {
                 contentPadding = PaddingValues(),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text("View", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimary)
+                Text(
+                    "View",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
             }
         }
     }
 }
-
 
 
 @Composable
@@ -272,296 +389,136 @@ fun SelectWorkoutPlanDialog(
     }
 }
 
-@Composable
-fun LogDetailsForm(
-    workoutPlans: List<WorkoutPlan>, // Now accepts a list of WorkoutPlan
-    viewModel: MainViewModel,
-    onLogSaved: () -> Unit
-) {
-    // This will hold all unique exercises across the selected workout plans
-    var exercises by remember { mutableStateOf<List<Exercise>>(emptyList()) }
-    var exerciseDetails = remember { mutableStateListOf<ExerciseDetail>() }
-    var isNameDialogVisible by remember { mutableStateOf(false) }
-    var logName by remember { mutableStateOf("") }
 
-    // Fetch and combine exercises from all plans
-    LaunchedEffect(workoutPlans) {
-        val combinedExerciseIds = workoutPlans.flatMap { it.exercises }.distinct()
-        viewModel.fetchExercisesDetailsByIds(combinedExerciseIds) { fetchedExercises ->
-            exercises = fetchedExercises
-            exerciseDetails.clear()
-            fetchedExercises.forEach { exercise ->
-                exerciseDetails.add(ExerciseDetail(exercise.id, exercise.name))
+
+@Composable
+fun SavedLogsList(viewModel: MainViewModel) {
+    val savedLogs by viewModel.savedLogs.observeAsState(initial = emptyList())
+    // Represents the index in savedLogs to start showing logs from
+    var startIndex by remember { mutableStateOf(0) }
+    val sortedLogs = savedLogs.sortedByDescending { it.logDate }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.End
+        ) {
+            // Adjusting to move backwards through logs
+            IconButton(
+                onClick = {
+                    startIndex = maxOf(0, startIndex - 3) // Move back by 3 logs, not going below 0
+                },
+                enabled = startIndex > 0 // Enable when not at the start
+            ) {
+                Icon(Icons.Default.ArrowBack, "Show Previous Logs")
+            }
+
+            // Adjusting to move forwards through logs
+            IconButton(
+                onClick = {
+                    startIndex =
+                        minOf(sortedLogs.size - 3, startIndex + 3) // Move forward by 3 logs
+                },
+                enabled = startIndex + 3 < savedLogs.size // Enable if more logs are available ahead
+            ) {
+                Icon(Icons.Default.ArrowForward, "Show Next Logs")
+            }
+        }
+
+        // Calculate the subset of logs to show based on current startIndex
+        val displayLogs = sortedLogs.drop(startIndex).take(3)
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            items(displayLogs) { log ->
+                LogItem(log = log, viewModel = viewModel)
+                Divider()
             }
         }
     }
+}
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceEvenly
+@SuppressLint("SuspiciousIndentation")
+@Composable
+fun LogItem(log: TrainingLog, viewModel: MainViewModel) {
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+
+//    Column(modifier = Modifier.clickable { viewModel.toggleLogDetails(log.logName) }) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clickable { viewModel.toggleLogDetails(log.logName) },
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "Logging for Plans:",
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(16.dp)
-            )
-            workoutPlans.forEach { plan ->
-                Text(
-                    plan.planName,
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
-                )
-            }
-        }
-        Divider() // Divider for visual separation
-
-        // Display exercises as before, now consolidated from multiple plans
-        LazyColumn(modifier = Modifier.weight(1f)) {
-            items(exerciseDetails) { detail ->
-                ExerciseDetailEntry(detail = detail) { updatedDetail ->
-                    val index =
-                        exerciseDetails.indexOfFirst { it.exerciseId == updatedDetail.exerciseId }
-                    if (index != -1) {
-                        exerciseDetails[index] = updatedDetail
-                    }
-                }
-            }
-        }
-
-        Divider()
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
-        ) {
-            IconButton(
-                onClick = { isNameDialogVisible = true },
-                modifier = Modifier
-                    .padding(0.dp)
-                    .width(40.dp)
-                    .height(35.dp)
-            ) {
-                Icon(
-                    modifier = Modifier
-                        .width(60.dp)
-                        .height(80.dp), imageVector = Filled.Done, contentDescription = "Save"
-                )
-            }
-            IconButton(
-                onClick = {
-                    // Adjust saving logic if necessary to account for logging multiple plans
-                    viewModel.saveExerciseLog(
-                        logName,
-                        workoutPlans.map { it.id }.toString(),
-                        exerciseDetails
-                    )
-                    isNameDialogVisible = false
-                    logName = "" // Clear log name for next use
-
-
-                    onLogSaved()
-                },
-                modifier = Modifier
-                    .padding(0.dp)
-                    .width(40.dp)
-                    .height(35.dp)
-            ) {
-                Icon(
-                    modifier = Modifier
-                        .width(60.dp)
-                        .height(80.dp),
-                    imageVector = Filled.Close,
-                    contentDescription = "Save"
-                )
-            }
-        }
-    }
-
-    if (isNameDialogVisible) {
-        NameLogDialog(
-            logName = logName,
-            onLogNameChange = { logName = it },
-            onConfirm = {
-                if (logName.isNotBlank()) {
-                    val workoutPlanIds =
-                        workoutPlans.joinToString(separator = ",") { it.id.toString() }
-                    viewModel.saveExerciseLog(logName, workoutPlanIds, exerciseDetails)
-                    isNameDialogVisible = false
-                    logName = "" // Clear the log name for next use
-                    onLogSaved()
-                }
-            },
-            onDismiss = { isNameDialogVisible = false }
-        )
-    }
-}
-
-@Composable
-fun NameLogDialog(
-    logName: String,
-    onLogNameChange: (String) -> Unit,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Name Your Log") },
-        text = {
-            TextField(
-                value = logName,
-                onValueChange = onLogNameChange,
-                label = { Text("Log Name") }
-            )
-        },
-        confirmButton = {
-            Button(onClick = onConfirm) {
-                Text("Save")
-            }
-        },
-        dismissButton = {
-            Button(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
-
-@Composable
-fun ExerciseDetailEntry(
-    detail: ExerciseDetail,
-    onDetailUpdate: (ExerciseDetail) -> Unit // Callback to handle updates
-) {
-    var reps by remember { mutableStateOf(detail.reps.toFloat()) }
-    var sets by remember { mutableStateOf(detail.sets.toFloat()) }
-    var weightText by remember { mutableStateOf(detail.weight.toString()) }
-
-    Column(
-        modifier = Modifier.padding(15.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(2.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(detail.exerciseName, style = MaterialTheme.typography.headlineLarge)
-            TextField(
-                value = weightText,
-                onValueChange = { newValue ->
-                    weightText = newValue.filter { it.isDigit() || it == '.' }
-                    val newWeight = weightText.toFloatOrNull()
-                        ?: detail.weight // Fallback to the current weight if conversion fails
-                    onDetailUpdate(detail.copy(weight = newWeight))
-                },
-                label = { Text("Weight: kg") },
-                singleLine = true,
-
-
-
-
-
-
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier
-                    .width(100.dp)
-                    .height(50.dp)
-            )
-        }
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-        ) {
-            Text("Sets: ${sets.toInt()}")
-            Slider(
-                value = sets, onValueChange = { newValue ->
-                    sets = newValue
-                    onDetailUpdate(detail.copy(sets = sets.toInt()))
-                }, valueRange = 1f..10f, modifier = Modifier
-                    .padding(vertical = 8.dp)
-                    .width(200.dp)
-            )
-
-            Text("Reps: ${reps.toInt()}")
-            Slider(
-                value = reps, onValueChange = { newValue ->
-                    reps = newValue
-                    onDetailUpdate(detail.copy(reps = reps.toInt()))
-                }, valueRange = 1f..20f, modifier = Modifier
-                    .padding(vertical = 8.dp)
-                    .width(200.dp)
-            )
-        }
-    }
-    Divider()
-}
-
-@Composable
-fun SavedLogsList(viewModel: MainViewModel) {
-    val savedLogs by viewModel.savedLogs.observeAsState(initial = emptyList())
-
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-    ) {
-        items(savedLogs) { log ->
-            LogItem(log = log, viewModel = viewModel) // Passando o log e o ViewModel para LogItem
-            Divider() // Adiciona um divisor entre os itens para melhor visualização
-        }
-    }
-}
-
-
-@Composable
-fun LogItem(log: TrainingLog, viewModel: MainViewModel) {
-    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-
-    Column(modifier = Modifier.clickable { viewModel.toggleLogDetails(log.logName) }) {
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(log.logName, style = MaterialTheme.typography.headlineLarge)
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier,
                 horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Top
             ) {
-                Text(dateFormat.format(log.logDate), style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    dateFormat.format(log.logDate),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
                 IconButton(onClick = { viewModel.deleteLog(log.logName) }) {
                     Icon(imageVector = Filled.Close, contentDescription = "Delete")
                 }
             }
         }
+    }
 
 
-        // Toggle visibility of log details
-        if (log.isDetailsVisible) {
-            log.exercises.forEach { exerciseDetail ->
+    // Toggle visibility of log details
+    if (log.isDetailsVisible) {
+        log.exercises.forEach { exerciseDetail ->
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.Center
+            ) {
                 Text(
                     "Exercise: ${exerciseDetail.exerciseName}",
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodyLarge
                 )
-                Text("Sets: ${exerciseDetail.sets}", style = MaterialTheme.typography.bodySmall)
-                Text("Reps: ${exerciseDetail.reps}", style = MaterialTheme.typography.bodySmall)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Sets: ${exerciseDetail.sets}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Text(
+                        "Reps: ${exerciseDetail.reps}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
                 Text(
                     "Weight: ${exerciseDetail.weight}kg",
                     style = MaterialTheme.typography.bodySmall
                 )
-                Divider(modifier = Modifier.padding(vertical = 4.dp)) // Optional: add a divider for clarity
+                HorizontalDivider(modifier = Modifier.padding(vertical = 5.dp)) // Optional: add a divider for clarity
             }
         }
     }
 }
+
+
 //            if (showGoalsDialog.value) {
 //                GoalSelectionDialog(
 //                    goalsList = userGoals,
@@ -641,3 +598,270 @@ fun LogItem(log: TrainingLog, viewModel: MainViewModel) {
 //    )
 //}
 //
+
+
+
+
+// Logs Creation system:
+
+//
+//@Composable
+//fun LogDetailsForm(
+//    workoutPlans: List<WorkoutPlan>,
+//    viewModel: MainViewModel,
+//    onLogSaved: () -> Unit,
+//    // Adiciona parâmetro para a meta a ser atualizada, se necessário
+//    goalToUpdate: Goal? = null
+//) {
+//    // This will hold all unique exercises across the selected workout plans
+//    var exercises by remember { mutableStateOf<List<Exercise>>(emptyList()) }
+//    var exerciseDetails = remember { mutableStateListOf<ExerciseDetail>() }
+//    var isNameDialogVisible by remember { mutableStateOf(false) }
+//    var logName by remember { mutableStateOf("") }
+//
+//    // Fetch and combine exercises from all plans
+//    LaunchedEffect(workoutPlans) {
+//        val combinedExerciseIds = workoutPlans.flatMap { it.exercises }.distinct()
+//        viewModel.fetchExercisesDetailsByIds(combinedExerciseIds) { fetchedExercises ->
+//            exercises = fetchedExercises
+//            exerciseDetails.clear()
+//            fetchedExercises.forEach { exercise ->
+//                exerciseDetails.add(ExerciseDetail(exercise.id, exercise.name))
+//            }
+//        }
+//    }
+//
+//    Column(
+//        modifier = Modifier
+//            .fillMaxSize(),
+//        horizontalAlignment = Alignment.CenterHorizontally,
+//        verticalArrangement = Arrangement.SpaceEvenly
+//    ) {
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth(),
+//            horizontalArrangement = Arrangement.SpaceBetween,
+//            verticalAlignment = Alignment.CenterVertically
+//        ) {
+//            Text(
+//                "Logging for Plans:",
+//                style = MaterialTheme.typography.titleLarge,
+//                modifier = Modifier.padding(16.dp)
+//            )
+//            workoutPlans.forEach { plan ->
+//                Text(
+//                    plan.planName,
+//                    style = MaterialTheme.typography.titleMedium,
+//                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+//                )
+//            }
+//        }
+//        Divider() // Divider for visual separation
+//
+//        // Display exercises as before, now consolidated from multiple plans
+//        LazyColumn(modifier = Modifier.weight(1f)) {
+//            items(exerciseDetails) { detail ->
+//                ExerciseDetailEntry(detail = detail) { updatedDetail ->
+//                    val index =
+//                        exerciseDetails.indexOfFirst { it.exerciseId == updatedDetail.exerciseId }
+//                    if (index != -1) {
+//                        exerciseDetails[index] = updatedDetail
+//                    }
+//                }
+//            }
+//        }
+//
+//        Divider()
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth(),
+//            horizontalArrangement = Arrangement.End
+//        ) {
+//            IconButton(
+//                onClick = { isNameDialogVisible = true },
+//                modifier = Modifier
+//                    .padding(0.dp)
+//                    .width(40.dp)
+//                    .height(35.dp)
+//            ) {
+//                Icon(
+//                    modifier = Modifier
+//                        .width(60.dp)
+//                        .height(80.dp), imageVector = Filled.Done, contentDescription = "Save"
+//                )
+//            }
+//            IconButton(
+//                onClick = {
+//                    // Adjust saving logic if necessary to account for logging multiple plans
+//                    viewModel.saveExerciseLog(
+//                        logName,
+//                        workoutPlans.map { it.id }.toString(),
+//                        exerciseDetails
+//                    )
+//                    isNameDialogVisible = false
+//                    logName = "" // Clear log name for next use
+//
+//
+//                    onLogSaved()
+//                },
+//                modifier = Modifier
+//                    .padding(0.dp)
+//                    .width(40.dp)
+//                    .height(35.dp)
+//            ) {
+//                Icon(
+//                    modifier = Modifier
+//                        .width(60.dp)
+//                        .height(80.dp),
+//                    imageVector = Filled.Close,
+//                    contentDescription = "Save"
+//                )
+//            }
+//        }
+//    }
+//
+//    var goalToUpdate by remember { mutableStateOf<Goal?>(null) }
+//
+//    if (isNameDialogVisible) {
+//        // Assumindo que você determina `goalToUpdate` baseado em alguma lógica anterior
+//        NameLogDialog(
+//            logName = logName,
+//            onLogNameChange = { logName = it },
+//            goalToUpdate = goalToUpdate, // Use a meta selecionada
+//            onUpdate = { updatedGoal ->
+//                // Atualiza a meta
+//                viewModel.updateGoal(updatedGoal)
+//                viewModel.saveProgressUpdate(updatedGoal.id, updatedGoal.currentValue.toFloat())
+//                Log.d("GoalScreen", "Goal updated: $updatedGoal")
+//            },
+//            onConfirm = {
+//                // Salva o log
+//                val workoutPlanIds = workoutPlans.joinToString(separator = ",") { it.id.toString() }
+//                viewModel.saveExerciseLog(logName, workoutPlanIds, exerciseDetails)
+//                isNameDialogVisible = false
+//                logName = "" // Limpa o nome do log
+//                onLogSaved()
+//            },
+//            onDismiss = { isNameDialogVisible = false },
+//        )
+//    }
+//}
+//
+//
+//@Composable
+//fun NameLogDialog(
+//    logName: String,
+//    onLogNameChange: (String) -> Unit,
+//    goalToUpdate: Goal?,
+//    onUpdate: (Goal) -> Unit,
+//    onConfirm: () -> Unit,
+//    onDismiss: () -> Unit
+//) {
+//    var newValue by remember { mutableStateOf("") }
+//    AlertDialog(
+//        onDismissRequest = onDismiss,
+//        title = { Text("Name Your Log") },
+//        text = {
+//            Column {
+//                TextField(
+//                    value = logName,
+//                    onValueChange = onLogNameChange,
+//                    label = { Text("Log Name") }
+//                )
+//                // Se newValue é necessário, inclua um TextField para capturar essa informação
+//                TextField(
+//                    value = newValue,
+//                    onValueChange = { newValue = it },
+//                    label = { Text("New Value") }
+//                )
+//            }
+//        },
+//        confirmButton = {
+//            Button(onClick = {
+//                // Apenas procede se logName e, se necessário, newValue estiverem preenchidos
+//                if (logName.isNotBlank() && (goalToUpdate == null || newValue.isNotBlank())) {
+//                    if (goalToUpdate != null) {
+//                        // Supondo que newValue será usado para atualizar a meta
+//                        val updatedGoal = goalToUpdate.copy(currentValue = newValue.toInt())
+//                        onUpdate(updatedGoal) // Atualiza a meta
+//                    }
+//                    onConfirm() // Procede com o salvamento do log
+//                }
+//            }) {
+//                Text("Save")
+//            }
+//        },
+//        dismissButton = {
+//            Button(onClick = onDismiss) {
+//                Text("Cancel")
+//            }
+//        }
+//    )
+//}
+//
+//
+//@Composable
+//fun ExerciseDetailEntry(
+//    detail: ExerciseDetail,
+//    onDetailUpdate: (ExerciseDetail) -> Unit // Callback to handle updates
+//) {
+//    var reps by remember { mutableStateOf(detail.reps.toFloat()) }
+//    var sets by remember { mutableStateOf(detail.sets.toFloat()) }
+//    var weightText by remember { mutableStateOf(detail.weight.toString()) }
+//
+//    Column(
+//        modifier = Modifier.padding(15.dp)
+//    ) {
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(2.dp),
+//            verticalAlignment = Alignment.CenterVertically,
+//            horizontalArrangement = Arrangement.SpaceBetween
+//        ) {
+//            Text(detail.exerciseName, style = MaterialTheme.typography.headlineLarge)
+//            TextField(
+//                value = weightText,
+//                onValueChange = { newValue ->
+//                    weightText = newValue.filter { it.isDigit() || it == '.' }
+//                    val newWeight = weightText.toFloatOrNull()
+//                        ?: detail.weight // Fallback to the current weight if conversion fails
+//                    onDetailUpdate(detail.copy(weight = newWeight))
+//                },
+//                label = { Text("Weight: kg") },
+//                singleLine = true,
+//
+//
+//                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+//                modifier = Modifier
+//                    .width(100.dp)
+//                    .height(50.dp)
+//            )
+//        }
+//        Column(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//        ) {
+//            Text("Sets: ${sets.toInt()}")
+//            Slider(
+//                value = sets, onValueChange = { newValue ->
+//                    sets = newValue
+//                    onDetailUpdate(detail.copy(sets = sets.toInt()))
+//                }, valueRange = 1f..10f, modifier = Modifier
+//                    .padding(vertical = 8.dp)
+//                    .width(200.dp)
+//            )
+//
+//            Text("Reps: ${reps.toInt()}")
+//            Slider(
+//                value = reps, onValueChange = { newValue ->
+//                    reps = newValue
+//                    onDetailUpdate(detail.copy(reps = reps.toInt()))
+//                }, valueRange = 1f..20f, modifier = Modifier
+//                    .padding(vertical = 8.dp)
+//                    .width(200.dp)
+//            )
+//        }
+//    }
+//    Divider()
+//}

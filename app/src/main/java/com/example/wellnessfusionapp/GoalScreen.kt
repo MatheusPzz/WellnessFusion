@@ -1,21 +1,29 @@
 package com.example.wellnessfusionapp
 
+import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,7 +45,11 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.sp
 import com.example.wellnessfusionapp.Models.Exercise
 import com.example.wellnessfusionapp.Models.GoalType
 import com.google.firebase.Timestamp
@@ -52,6 +64,7 @@ fun GoalScreen(navController: NavController, viewModel: MainViewModel) {
 
     Scaffold(topBar = { GoalScreenTopAppBar(navController) }) { innerPadding ->
         Surface(modifier = Modifier.padding(innerPadding)) {
+
             GoalScreenContent(
                 predefinedGoalTypes = predefinedGoalTypes,
                 selectedGoalType = selectedGoalType,
@@ -60,6 +73,7 @@ fun GoalScreen(navController: NavController, viewModel: MainViewModel) {
                 onGoalAdded = { selectedGoalType = null },
                 navController = navController
             )
+
         }
     }
 }
@@ -71,7 +85,7 @@ fun GoalScreenTopAppBar(navController: NavController) {
         title = { Text("Set Your Goals") },
         navigationIcon = {
             IconButton(onClick = { navController.navigateUp() }) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
             }
         }
     )
@@ -100,7 +114,7 @@ fun GoalScreenContent(
 
 @Composable
 fun GoalSelectionList(predefinedGoalTypes: List<String>, onGoalTypeSelected: (String) -> Unit) {
-    LazyColumn(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)) {
+    LazyColumn(contentPadding = PaddingValues(8.dp)) {
         items(predefinedGoalTypes) { goalType ->
             GoalTypeItem(goalType = goalType, onGoalTypeSelected = onGoalTypeSelected)
         }
@@ -112,13 +126,25 @@ fun GoalTypeItem(goalType: String, onGoalTypeSelected: (String) -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .height(120.dp)
             .clickable { onGoalTypeSelected(goalType) }
             .padding(8.dp)
     ) {
-        Text(text = goalType, style = MaterialTheme.typography.bodyMedium)
-        Spacer(modifier = Modifier.height(8.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.LightGray, MaterialTheme.shapes.medium)
+        ) {
+            Column(
+                modifier = Modifier.padding(15.dp)
+            ) {
+                Text(text = goalType, style = MaterialTheme.typography.bodyMedium)
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+        }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -134,13 +160,20 @@ fun GoalDetailScreen(
 
     val exercises by viewModel.exercisesForDropdown.observeAsState(emptyList())
     var selectedExercise by remember { mutableStateOf<Exercise?>(null) }
-    var currentValue by remember { mutableStateOf("") }
+    val currentValue by remember { mutableStateOf("") }
+    var initialValue by remember { mutableStateOf("") }
     var desiredValue by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     val startDate by remember { mutableStateOf(Timestamp.now()) }
 
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text("Goal Type: $goalType", style = MaterialTheme.typography.headlineSmall)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(0.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
+    ) {
+        Text("Goal Type: $goalType", style = MaterialTheme.typography.titleLarge, fontSize = 21.sp)
 
         if (goalType == "Exercising Days Goal") {
             // Render text fields specific to attendance goals
@@ -161,59 +194,80 @@ fun GoalDetailScreen(
             )
 
         } else {
-            // Render text fields specific to other goal types
-            OutlinedTextField(
-                value = selectedExercise?.name ?: "Select Exercise",
-                onValueChange = { },
-                readOnly = true,
-                trailingIcon = {
-                    IconButton(onClick = { expanded = !expanded }) {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                    }
-                },
-                label = { Text("Exercise") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
+            Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                exercises.forEach { exercise ->
-                    DropdownMenuItem(
-                        onClick = {
-                            selectedExercise = exercise
-                            expanded = false
+                Text(
+                    "Set your goal for the following exercise",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.End
+
+                ) {
+
+                    OutlinedTextField(
+                        value = selectedExercise?.name ?: "Select Exercise",
+                        onValueChange = { expanded = !expanded },
+                        readOnly = true,
+                        trailingIcon = {
+                            IconButton(onClick = { expanded = !expanded }) {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                            }
                         },
-                        text = { Text(exercise.name) }
+                        label = { Text("Exercise") },
+                        modifier = Modifier.fillMaxWidth().clickable {
+                            expanded = !expanded
+                        },
+                    )
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.End
+                    )
+                    {
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.width(350.dp)
+                        ) {
+                            exercises.forEach { exercise ->
+                                DropdownMenuItem(
+                                    onClick = {
+                                        selectedExercise = exercise
+                                        expanded = false
+                                    },
+                                    text = { Text(exercise.name) }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                if (goalType != "Exercising Days Goal") {
+                    // Render text fields specific to other goal types
+                    OutlinedTextField(
+                        value = initialValue,
+                        onValueChange = { initialValue = it },
+                        label = { Text("Current Weight: KG") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    OutlinedTextField(
+                        value = desiredValue,
+                        onValueChange = { desiredValue = it },
+                        label = { Text("Goal: KG") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
         }
 
-        Spacer(Modifier.height(16.dp))
-
-        if (goalType != "Exercising Days Goal") {
-            // Render text fields specific to other goal types
-            OutlinedTextField(
-                value = currentValue,
-                onValueChange = { currentValue = it },
-                label = { Text("Current Value: KG") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = desiredValue,
-                onValueChange = { desiredValue = it },
-                label = { Text("Desired Value: KG") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(10.dp))
 
         Button(onClick = {
             if (goalType == "Exercising Days Goal" && desiredValue.isNotEmpty()) {
@@ -221,9 +275,10 @@ fun GoalDetailScreen(
                 val newGoal = Goal(
                     id = UUID.randomUUID().toString(),
                     type = GoalType(goalType, ""), // Create GoalType instance
+                    typeId = "",
                     description = "Attendance goal",
                     desiredValue = desiredValue.toInt(),
-                    currentValue = 0,
+                    initialValue = initialValue.toInt(),
                     exerciseId = null,
                     startDate = Timestamp.now(),
                     endDate = null,
@@ -233,23 +288,26 @@ fun GoalDetailScreen(
                 viewModel.addGoal(newGoal)
                 onGoalAdded()
                 navController.popBackStack()
-            } else if (goalType == "Exercising Weight Progress" && selectedExercise != null && currentValue.isNotEmpty() && desiredValue.isNotEmpty()) {
+            } else if (goalType == "Exercising Weight Progress" && selectedExercise != null && initialValue.isNotEmpty() && desiredValue.isNotEmpty()) {
                 // Handle other goal types
                 val newGoal = Goal(
                     id = UUID.randomUUID().toString(),
                     type = GoalType(goalType, ""), // Create GoalType instance
+                    typeId = "",
                     description = selectedExercise!!.name,
                     desiredValue = desiredValue.toInt(),
-                    currentValue = currentValue.toInt(),
+                    initialValue = initialValue.toInt(),
                     exerciseId = selectedExercise!!.id ?: "",
                     startDate = Timestamp.now(),
                     endDate = null,
                     status = "active",
                     workoutDays = null
                 )
-
+                Log.d("GoalScreen", "New goal: $newGoal")
                 viewModel.addGoal(newGoal)
+                Log.d("GoalScreen", "Goal added")
                 onGoalAdded()
+                Log.d("GoalScreen", "onGoalAdded called")
                 navController.popBackStack()
             }
         }) {
@@ -257,4 +315,3 @@ fun GoalDetailScreen(
         }
     }
 }
-

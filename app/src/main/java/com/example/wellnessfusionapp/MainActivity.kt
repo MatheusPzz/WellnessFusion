@@ -13,7 +13,10 @@ import com.example.wellnessfusionapp.ViewModels.ExerciseSelectionViewModel
 import com.example.wellnessfusionapp.ViewModels.GeneratedWorkoutViewModel
 import com.example.wellnessfusionapp.ViewModels.MainViewModel
 import com.example.wellnessfusionapp.ui.theme.WellnessFusionAppTheme
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.firestore
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 class MainActivity : ComponentActivity() {
@@ -36,7 +39,8 @@ class MainActivity : ComponentActivity() {
 
                 val startDestination = if (authState != null) "home" else "login"
 
-                MainNavHost(navController, CategoryViewModel(), startDestination, ExerciseSelectionViewModel(), GeneratedWorkoutViewModel(), MainViewModel(), "", "", emptyList())
+                MainNavHost(navController, CategoryViewModel(), startDestination, ExerciseSelectionViewModel(), GeneratedWorkoutViewModel(), MainViewModel(), "", "", emptyList(), "")
+
             }
         }
     }
@@ -48,3 +52,26 @@ fun WellnessScreenPreview() {
 
     }
 }
+
+
+//fun saveFCMTokenForUser(token: String) {
+//    val userId = FirebaseAuth.getInstance().currentUser?.uid
+//    if (userId != null) {
+//        val userRef = Firebase.firestore.collection("Users").document(userId)
+//
+//        userRef.update("fcmToken", token)
+//            .addOnSuccessListener { Log.d("FCM", "FCM Token updated for user $userId") }
+//            .addOnFailureListener { e -> Log.w("FCM", "Error updating FCM Token for user $userId", e) }
+//    }
+//}
+//FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+//    if (!task.isSuccessful) {
+//        Log.w("FCM", "Fetching FCM registration token failed", task.exception)
+//        return@addOnCompleteListener
+//    }
+//    // Get new FCM registration token
+//    val token = task.result
+//    Log.d("FCM", "FCM Token: $token")
+//    // Armazene o token do dispositivo
+//    saveFCMTokenForUser(token)
+//}

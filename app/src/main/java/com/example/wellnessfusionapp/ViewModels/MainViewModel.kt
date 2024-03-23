@@ -1,5 +1,6 @@
 package com.example.wellnessfusionapp.ViewModels
 
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -19,6 +20,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.firestore
+import com.google.firebase.storage.FirebaseStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,6 +40,8 @@ class MainViewModel @Inject constructor() : ViewModel() {
         fetchUserWorkoutPlans()
         Log.d("MainViewModel", "MainViewModel created")
         fetchSavedLogs()
+        fetchUserProfilePicture()
+        fetchCompletedGoals()
     }
 
     private val _instructions = MutableLiveData<Instructions>()
@@ -115,10 +119,6 @@ class MainViewModel @Inject constructor() : ViewModel() {
     val _workoutPlans = MutableLiveData<List<WorkoutPlan>>()
     val workoutPlans: LiveData<List<WorkoutPlan>> = _workoutPlans
 
-//    private fun getCurrentUserId(): String {
-//        return FirebaseAuth.getInstance().currentUser?.uid.toString()
-//
-//    }
 
     fun fetchUserWorkoutPlans() {
         viewModelScope.launch {
@@ -178,55 +178,46 @@ class MainViewModel @Inject constructor() : ViewModel() {
                 exercises = exerciseLogs
             )
 
-            try {
-                Firebase.firestore
-                    .collection("Users").document(userId)
-                    .collection("UserProfile").document(userId)
-                    .collection("TrainingLogs").add(logEntry)
-                    .addOnSuccessListener { documentReference ->
-                        Log.d("Save Log", "Training log saved successfully")
-
-                        // Após salvar o log com sucesso, chamar a função para atualizar as metas
-                        updateGoalsBasedOnLog(exerciseLogs)
-                    }
-                    .addOnFailureListener { e ->
-                        Log.e("Save Log", "Error saving training log", e)
-                    }
-            } catch (e: Exception) {
-                Log.e("Save Log", "Error saving training log", e)
-            }
+            FirebaseFirestore.getInstance().collection("Users").document(userId)
+                .collection("UserProfile").document(userId)
+                .collection("TrainingLogs").add(logEntry)
+                .addOnSuccessListener { documentReference ->
+                    Log.d("Save Log", "Training log saved successfully")
+                    // Chamar a função para atualizar as metas
+                    updateGoalsBasedOnLog(exerciseLogs, userId)
+                    fetchSavedLogs()
+                }
+                .addOnFailureListener { e ->
+                    Log.e("Save Log", "Error saving training log", e)
+                }
         }
     }
 
-    private fun updateGoalsBasedOnLog(exerciseLogs: List<ExerciseDetail>) {
-        viewModelScope.launch {
-            val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return@launch
+    private fun updateGoalsBasedOnLog(exerciseLogs: List<ExerciseDetail>, userId: String) {
+        val userGoalsRef = FirebaseFirestore.getInstance().collection("Users").document(userId)
+            .collection("UserProfile").document(userId)
+            .collection("Goals")
 
-            val userGoalsRef = Firebase.firestore.collection("Users").document(userId)
-                .collection("UserProfile").document(userId)
-                .collection("Goals")
+        userGoalsRef.get().addOnSuccessListener { goalsSnapshot ->
+            goalsSnapshot.documents.forEach { goalDocument ->
+                val goal = goalDocument.toObject(Goal::class.java) ?: return@forEach
 
-            // Removido o filtro incorreto, vamos buscar todas as metas e filtrar localmente.
-            userGoalsRef.get().addOnSuccessListener { goalsSnapshot ->
-                goalsSnapshot.documents.forEach { goalDocument ->
-                    val goal = goalDocument.toObject(Goal::class.java) ?: return@forEach
+                exerciseLogs.forEach { log ->
+                    if (log.exerciseId == goal.exerciseId && log.weight > goal.currentValue) {
+                        val newCurrentValue = log.weight
+                        userGoalsRef.document(goal.id).update("currentValue", newCurrentValue)
+                            .addOnSuccessListener {
+                                Log.d("UpdateGoal", "Goal updated successfully based on new log")
+                                // Atualizar o histórico de progresso aqui garante que aconteça após a meta ser atualizada
+                                saveProgressUpdate(goal.id, newCurrentValue)
+                                checkAndCompleteGoal(goal.id) // Novo: Verificar se a meta foi completada
 
-                    exerciseLogs.forEach { log ->
-                        if (log.exerciseId == goal.exerciseId && log.weight > goal.currentValue) {
-                            // Atualiza a meta somente se o peso do log for maior que o currentValue da meta.
-                            val newCurrentValue = log.weight
-                            userGoalsRef.document(goal.id).update("currentValue", newCurrentValue)
-                                .addOnSuccessListener {
-                                    Log.d("UpdateGoal", "Goal updated successfully based on new log")
-                                    Log.d("UpdateGoal", "New value: $newCurrentValue")
-                                    fetchProgressHistory(goal.id)
-                                }
-                        }
+                            }
                     }
                 }
-            }.addOnFailureListener { e ->
-                Log.e("UpdateGoal", "Error fetching goals", e)
             }
+        }.addOnFailureListener { e ->
+            Log.e("UpdateGoal", "Error fetching goals", e)
         }
     }
 
@@ -234,26 +225,17 @@ class MainViewModel @Inject constructor() : ViewModel() {
     fun updateGoal(updatedGoal: Goal) {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
-        // Preparar os dados a serem atualizados
-        val goalUpdates = mapOf(
-            "currentValue" to updatedGoal.currentValue,
-            // Inclua outros campos que possam ser atualizados, se necessário
-        )
-
-        // Atualizar o documento correspondente na coleção de metas
-        Firebase.firestore.collection("Users").document(userId)
+        FirebaseFirestore.getInstance().collection("Users").document(userId)
             .collection("UserProfile").document(userId)
             .collection("Goals").document(updatedGoal.id)
-            .update(goalUpdates)
+            .update(mapOf("currentValue" to updatedGoal.currentValue))
             .addOnSuccessListener {
                 Log.d("UpdateGoal", "Goal successfully updated")
+                // Após a atualização da meta, salvar o progresso
                 saveProgressUpdate(updatedGoal.id, updatedGoal.currentValue.toFloat())
-                // Aqui você pode adicionar qualquer lógica adicional após a atualização bem-sucedida,
-                // como notificar o usuário ou atualizar a UI.
             }
             .addOnFailureListener { e ->
                 Log.e("UpdateGoal", "Error updating goal", e)
-                // Tratar o caso de erro, como informar o usuário da falha na atualização.
             }
     }
 
@@ -287,13 +269,12 @@ class MainViewModel @Inject constructor() : ViewModel() {
 
     fun saveProgressUpdate(goalId: String, newValue: Float) {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
-
         val progressUpdate = mapOf(
             "date" to Timestamp.now(),
             "value" to newValue
         )
 
-        Firebase.firestore.collection("Users").document(userId)
+        FirebaseFirestore.getInstance().collection("Users").document(userId)
             .collection("UserProfile").document(userId)
             .collection("Goals").document(goalId)
             .collection("ProgressHistory").add(progressUpdate)
@@ -423,6 +404,7 @@ class MainViewModel @Inject constructor() : ViewModel() {
             "typeId" to goal.type.id, // Store only the ID of the goal type
             "description" to goal.description,
             "desiredValue" to goal.desiredValue,
+            "initialValue" to goal.initialValue,
             "currentValue" to goal.currentValue,
             "exerciseId" to goal.exerciseId,
             "startDate" to goal.startDate,
@@ -448,14 +430,15 @@ class MainViewModel @Inject constructor() : ViewModel() {
         Firebase.firestore.collection("Users").document(userId)
             .collection("UserProfile").document(userId)
             .collection("Goals")
+            .whereEqualTo("status", "active") // Adicionado filtro para status ativo
             .addSnapshotListener { value, error ->
                 if (error != null) {
                     Log.e("FetchGoals", "Error fetching goals", error)
                     return@addSnapshotListener
                 }
 
-                val goalsList = value?.mapNotNull { it.toObject(Goal::class.java) } ?: listOf()
-                _goals.value = goalsList
+                val activeGoalsList = value?.mapNotNull { it.toObject(Goal::class.java) } ?: listOf()
+                _goals.value = activeGoalsList
             }
     }
 
@@ -491,6 +474,84 @@ class MainViewModel @Inject constructor() : ViewModel() {
     private val _exerciseSpecificLogs = MutableLiveData<List<TrainingLog>>()
     val exerciseSpecificLogs: LiveData<List<TrainingLog>> = _exerciseSpecificLogs
 
+
+    // Check and complete goal based on log input.
+
+    private val _goalCompletionEvent = MutableLiveData<Goal?>()
+    val goalCompletionEvent: LiveData<Goal?> = _goalCompletionEvent
+
+    fun clearGoalCompletionEvent() {
+        _goalCompletionEvent.value = null
+    }
+    private fun checkAndCompleteGoal(goalId: String) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        viewModelScope.launch {
+            val goalRef = Firebase.firestore
+                .collection("Users").document(userId)
+                .collection("UserProfile").document(userId)
+                .collection("Goals").document(goalId)
+
+            goalRef.get().addOnSuccessListener { documentSnapshot ->
+                val goal = documentSnapshot.toObject(Goal::class.java)
+                goal?.let {
+                    if (it.currentValue >= it.desiredValue && it.status != "completed") {
+                        // Meta atingida, atualizar status
+                        goalRef.update("status", "completed")
+                            .addOnSuccessListener {
+                                Log.d("GoalStatus", "Goal successfully marked as completed")
+                                _goalCompletionEvent.postValue(goal)
+                            }
+                            .addOnFailureListener { e -> Log.e("GoalStatus", "Error updating goal status", e) }
+                    }
+                }
+            }
+        }
+    }
+
+    private val _completedGoals = MutableLiveData<List<Goal>>()
+    val completedGoals: MutableLiveData<List<Goal>> = _completedGoals
+    private fun fetchCompletedGoals() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        viewModelScope.launch {
+            Firebase.firestore.collection("Users").document(userId)
+                .collection("UserProfile").document(userId)
+                .collection("Goals")
+                .whereEqualTo("status", "completed")
+                .addSnapshotListener { value, error ->
+                    if (error != null) {
+                        Log.e("FetchCompletedGoals", "Error fetching completed goals", error)
+                        return@addSnapshotListener
+                    }
+
+
+                    val completedGoalsList = value?.mapNotNull { it.toObject(Goal::class.java) } ?: listOf()
+                    _completedGoals.postValue(completedGoalsList)
+                }
+        }
+    }
+
+
+//    fun fetchLogsForExerciseGoals(exerciseId: String) {
+//        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+//        viewModelScope.launch {
+//            val logsList = mutableListOf<TrainingLog>()
+//            Firebase.firestore
+//                .collection("Users").document(userId)
+//                .collection("UserProfile").document(userId)
+//                .collection("TrainingLogs")
+//                .whereArrayContains("exercises.exerciseId", exerciseId) // Esta linha é um exemplo e pode precisar de ajuste.
+//                .get()
+//                .await()
+//                .documents.forEach { document ->
+//                    val log = document.toObject(TrainingLog::class.java)
+//                    Log.d("FetchLogs", "Fetched log: $log")
+//                    log?.let { logsList.add(it) }
+//                }
+//            _exerciseSpecificLogs.value = logsList // Assuma que _exerciseSpecificLogs é um LiveData ou StateFlow
+//            Log.d("FetchLogs", "Fetched ${logsList.size} logs for exercise $exerciseId")
+//        }
+//    }
+
     fun fetchLogsForExerciseGoals(exerciseId: String) {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         viewModelScope.launch {
@@ -499,14 +560,164 @@ class MainViewModel @Inject constructor() : ViewModel() {
                 .collection("Users").document(userId)
                 .collection("UserProfile").document(userId)
                 .collection("TrainingLogs")
-                .whereArrayContains("exercises.exerciseId", exerciseId) // Esta linha é um exemplo e pode precisar de ajuste.
                 .get()
                 .await()
                 .documents.forEach { document ->
                     val log = document.toObject(TrainingLog::class.java)
-                    log?.let { logsList.add(it) }
+                    // Ajuste na depuração para mostrar IDs dos exercícios corretamente
+                    log?.exercises?.let { exercises ->
+                        val exerciseIds = exercises.map { it.exerciseId }
+                        Log.d("FetchLogs", "Exercises in log: ${exerciseIds.joinToString()}")
+                    }
+                    // Filtragem correta dos logs que contêm o exerciseId específico
+                    if (log?.exercises?.any { it.exerciseId == exerciseId } == true) {
+                        logsList.add(log)
+                    }
                 }
-            _exerciseSpecificLogs.value = logsList // Assuma que _exerciseSpecificLogs é um LiveData ou StateFlow
+            _exerciseSpecificLogs.postValue(logsList)
+            Log.d("FetchLogs", "Fetched ${logsList.size} logs for exercise $exerciseId")
+        }
+    }
+
+//    fun fetchLogsForExerciseGoals(exerciseId: String) {
+//        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+//        viewModelScope.launch {
+//            val logsList = mutableListOf<TrainingLog>()
+//            Firebase.firestore
+//                .collection("Users").document(userId)
+//                .collection("UserProfile").document(userId)
+//                .collection("TrainingLogs")
+//                .get()
+//                .await()
+//                .documents.forEach { document ->
+//                    document.toObject(TrainingLog::class.java)?.let { log ->
+//                        if (log.exercises.any { exercise -> exercise.exerciseId == exerciseId }) {
+//                            logsList.add(log)
+//                        }
+//                    }
+//                }
+//            _exerciseSpecificLogs.postValue(logsList)
+//            Log.d("FetchLogs", "Fetched ${logsList.size} logs for exercise $exerciseId")
+//        }
+//    }
+
+
+
+
+
+
+    private val _profilePictureUrl = MutableStateFlow<String?>(null)
+    val profilePictureUrl = _profilePictureUrl.asStateFlow()
+    fun updateUserProfilePicture(imageUri: Uri, userId: String, onComplete: (Boolean, String) -> Unit) {
+        val storageRef = FirebaseStorage.getInstance().reference.child("profile_pictures/$userId.jpg")
+        val uploadTask = storageRef.putFile(imageUri)
+        if (FirebaseAuth.getInstance().currentUser == null) {
+            onComplete(false, "No authenticated user.")
+            return
+        }
+
+        uploadTask.continueWithTask { task ->
+            if (!task.isSuccessful) {
+                task.exception?.let {
+                    throw it
+                }
+            }
+            storageRef.downloadUrl
+        }.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val downloadUri = task.result
+                val db = FirebaseFirestore.getInstance()
+                db.collection("Users").document(userId).update("profile_picture", downloadUri.toString())
+                    .addOnSuccessListener {
+                        onComplete(true, "Profile picture updated successfully.")
+                        fetchUserProfilePicture()
+                    }
+                    .addOnFailureListener { e ->
+                        onComplete(false, e.message ?: "Error updating profile picture.")
+                    }
+            } else {
+                onComplete(false, task.exception?.message ?: "Error uploading profile picture.")
+            }
+        }
+    }
+
+    private fun fetchUserProfilePicture() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val db = FirebaseFirestore.getInstance()
+        db.collection("Users").document(userId).get()
+            .addOnSuccessListener { document ->
+                val profilePictureUrl = document.getString("profile_picture")
+                _profilePictureUrl.value = profilePictureUrl
+            }
+            .addOnFailureListener { e ->
+                Log.e("FetchProfilePicture", "Error fetching profile picture", e)
+            }
+    }
+
+    private val _userName = MutableStateFlow("") // Default value
+    val userName: StateFlow<String> = _userName.asStateFlow()
+    suspend fun fetchUserName() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val db = FirebaseFirestore.getInstance()
+
+        try {
+            Log.d("Firestore", "Fetching user name for ID: $userId")
+            val documentSnapshot = db.collection("Users").document(userId).get().await()
+            val fetchedName = documentSnapshot.getString("name") // Use a different variable name here
+            Log.d("Firestore", "Fetched name: $fetchedName")
+
+            // Update the _userName StateFlow
+            _userName.value = fetchedName ?: "User Not Found"
+        } catch (e: Exception) {
+            Log.e("Firestore", "Error fetching user name", e)
+            _userName.value = "Error Fetching User" // Update StateFlow on error
+        }
+    }
+    fun updateUserName(userId: String, newName: String, onComplete: (Boolean, String) -> Unit) {
+        if (FirebaseAuth.getInstance().currentUser == null) {
+            onComplete(false, "No authenticated user.")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                // Update the Firestore document for the user with the new name
+                FirebaseFirestore.getInstance().collection("Users").document(userId)
+                    .update("name", newName)
+                    .addOnSuccessListener {
+                        // Update the _userName state to reflect this change in the UI
+                        _userName.value = newName
+                        onComplete(true, "Name updated successfully.")
+                    }
+                    .addOnFailureListener { exception ->
+                        onComplete(false, exception.message ?: "Error updating name.")
+                    }
+            } catch (e: Exception) {
+                onComplete(false, e.message ?: "Error updating name.")
+            }
+        }
+    }
+
+    private val _goalDetails = MutableLiveData<Goal>()
+    val goalDetails: LiveData<Goal> = _goalDetails
+
+    fun fetchGoalDetails(goalId: String) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        viewModelScope.launch {
+            Firebase.firestore
+                .collection("Users").document(userId)
+                .collection("UserProfile").document(userId)
+                .collection("Goals").document(goalId)
+                .get()
+                .addOnSuccessListener { documentSnapshot ->
+                    val goal = documentSnapshot.toObject(Goal::class.java)
+                    goal?.let {
+                        _goalDetails.postValue(it)
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Log.e("FetchGoalDetails", "Error fetching goal details", e)
+                }
         }
     }
 

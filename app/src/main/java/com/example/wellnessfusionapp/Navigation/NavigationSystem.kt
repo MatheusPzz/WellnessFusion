@@ -39,6 +39,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import com.example.wellnessfusionapp.AchievedGoals
 import com.example.wellnessfusionapp.HomeScreen
 import com.example.wellnessfusionapp.InstructionScreen
 import com.example.wellnessfusionapp.LogScreen
@@ -81,7 +82,8 @@ fun MainNavHost(
     mainViewModel: MainViewModel,
     exerciseId: String,
     workoutPlanId: String,
-    goals: List<Goal>
+    goals: List<Goal>,
+    userId: String
 ) {
     NavHost(navController = navController as NavHostController, startDestination = startDestination)
     {
@@ -102,8 +104,10 @@ fun MainNavHost(
             HomeScreen(
                 navController,
                 categoryViewModel,
+                mainViewModel,
 //                viewModel2 = mainViewModel,
-                exerciseId = exerciseId
+                exerciseId = exerciseId,
+                userId = userId
             )
         }
         composable("logs") { LogScreen(navController, mainViewModel, goals) }
@@ -166,7 +170,8 @@ fun MainNavHost(
             CreatedPlan(
                 workoutPlanId = workoutPlanId,
                 navController = navController,
-                viewModel = generatedWorkoutViewModel
+                viewModel = generatedWorkoutViewModel,
+                mainViewModel = mainViewModel
             )
         }
         composable("goalScreen"){
@@ -181,7 +186,10 @@ fun MainNavHost(
             GoalProgressRecordScreen(goalId = goalId, viewModel = mainViewModel, navController = navController, exerciseId = exerciseId)
         }
         composable("UserProfile"){
-            ProfileScreen(navController = navController, userName = "User", userEmail = "", onChangePictureClick = {}, onNameChange = {}, userProfilePicture = painterResource(id = R.drawable.ic_launcher_foreground))
+            ProfileScreen(navController = navController, viewModel = mainViewModel)
+        }
+        composable("AchievedGoals"){
+            AchievedGoals(navController = navController, viewModel = mainViewModel)
         }
     }
 }

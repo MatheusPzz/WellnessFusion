@@ -2,19 +2,26 @@ package com.example.wellnessfusionapp
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
@@ -22,8 +29,10 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,7 +51,14 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -64,30 +80,53 @@ fun SavedWorkoutsScreen(viewModel: GeneratedWorkoutViewModel, navController: Nav
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Workout Plans") })
+            TopAppBar(title = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+
+                ) {
+                    Row(
+                        modifier = Modifier.width(200.dp),
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Text("Workout Plans")
+                    }
+                    ButtonPhysical(navController)
+                    MentalButton(navController)
+                }
+            })
         },
         bottomBar = { BottomNavBar(navController) }
 
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight()
-                .padding(paddingValues)
+        if (savedWorkouts.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("No saved workout plans", style = MaterialTheme.typography.bodyMedium)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .padding(paddingValues)
 
-        )
-        {
-            items(savedWorkouts) { workout ->
-                WorkoutCard(workout, viewModel, navController)
+            )
+            {
+                items(savedWorkouts) { workout ->
+                    WorkoutCard(workout, viewModel, navController)
+                }
             }
         }
     }
 }
 
-// edicao
-
-
-// edicao
 
 @Composable
 fun EditButton(workoutPlanId: String, currentName: String, viewModel: GeneratedWorkoutViewModel) {
@@ -138,8 +177,8 @@ fun DeleteButton(workoutPlanId: String, viewModel: GeneratedWorkoutViewModel) {
 }
 
 @Composable
-fun PlayButton(navController: NavController) {
-    IconButton(onClick = { navController.navigate("PlayWorkout") }) {
+fun PlayButton(navController: NavController, workout: WorkoutPlan) {
+    IconButton(onClick = { navController.navigate("createdPlans/${workout.workoutPlanId}") }) {
         Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Play Workout Plan")
     }
 }
@@ -160,22 +199,31 @@ fun WorkoutCard(
     }
     //
     Card(modifier = Modifier
-        .padding(15.dp)
-        .clickable { navController.navigate("createdPlans/${workout.workoutPlanId}") }) {
+        .padding(16.dp)
+        .clickable { }) {
         Column(modifier = Modifier.padding(0.dp)) {
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
             ) {
-                Text(text = workout.planName, style = MaterialTheme.typography.titleLarge)
-                Row {
-                    PlayButton(navController)
-                    EditButton(workout.workoutPlanId, workout.planName, viewModel)
-                    DeleteButton(workout.workoutPlanId, viewModel)
+                Column(
+                    modifier = Modifier
+                        .width(180.dp)
+                        .padding(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = workout.planName, style = MaterialTheme.typography.titleLarge)
                 }
+                PlayButton(navController, workout)
+                EditButton(workout.workoutPlanId, workout.planName, viewModel)
+                DeleteButton(workout.workoutPlanId, viewModel)
             }
-            Divider(modifier = Modifier.padding(vertical = 10.dp))
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
 
             val pagerState = rememberPagerState()
             HorizontalPager(
@@ -229,19 +277,79 @@ fun ExercisePage(exercise: Exercise, navController: NavController) {
                     text = "Descrição: ${exercise.description}",
                     style = MaterialTheme.typography.bodyMedium
                 )
-                IconButton(modifier = Modifier
-                    .padding(start = 40.dp)
-                    .size(50.dp),
-                    onClick = { navController.navigate("instructions/${exercise.id}") }) {
-                    Icon(
-                        modifier = Modifier
-                            .size(80.dp),
-                        imageVector = Icons.Filled.Info,
-                        contentDescription = "Instructions For Exercise"
-                    )
-                }
-            }
 
+            }
+            Column(
+
+            ) {
+                Text("Workout Counter: 0")
+            }
+        }
+    }
+}
+// column out and row out
+
+@Composable
+fun ButtonPhysical(navController: NavController) {
+
+    Column(
+        modifier = Modifier.padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .width(50.dp)
+                .height(50.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clip(shape = CircleShape)
+                    .graphicsLayer {
+                        alpha = 0.7f
+                    }
+                    .background(Color(0xffFE7316))
+            )
+            Image(
+                painter = painterResource(id = R.drawable.physical),
+                contentDescription = "Physical",
+                modifier = Modifier
+                    .height(120.dp) // Adjust size as needed
+                    .clickable(onClick = { navController.navigate("physicalCategory") }
+                    ))
+
+        }
+    }
+}
+
+@Composable
+fun MentalButton(navController: NavController) {
+
+    Column(
+        modifier = Modifier.padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .width(50.dp)
+                .height(50.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clip(shape = CircleShape)
+                    .graphicsLayer {
+                        alpha = 0.9f
+                    }
+                    .background(Color(0xff1666ba))
+            )
+            Image(
+                painter = painterResource(id = R.drawable.mental),
+                contentDescription = "Mental",
+                modifier = Modifier
+                    .height(120.dp) // Adjust size as needed
+                    .clickable(onClick = { navController.navigate("zenCategory") }
+                    ))
         }
     }
 }

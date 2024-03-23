@@ -1,11 +1,15 @@
 package com.example.wellnessfusionapp.ViewModels
 
+import android.util.Log
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.wellnessfusionapp.Models.WorkoutType
 import com.example.wellnessfusionapp.Models.Category
+import com.example.wellnessfusionapp.R
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,28 +17,29 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 @HiltViewModel
 class CategoryViewModel @Inject constructor() : ViewModel() {
     private val _physicalCategory = MutableStateFlow<List<Category>>(
         listOf(
-            Category("0", "Chest", false, Icons.Default.AccountBox),
-            Category("1", "Arms", false, Icons.Default.AccountBox),
-            Category("2", "Back", false, Icons.Default.AccountBox),
-            Category("3", "Legs", false, Icons.Default.AccountBox),
-            Category("4", "Shoulders", false, Icons.Default.AccountBox),
-            Category("5", "Abs", false, Icons.Default.AccountBox),
+            Category("0", "Chest", false, R.drawable.chest),
+            Category("1", "Arms", false, R.drawable.arms),
+            Category("2", "Back", false, R.drawable.backs),
+            Category("3", "Legs", false, R.drawable.legs),
+            Category("4", "Shoulders", false, R.drawable.shoulders),
+            Category("5", "Abs", false, R.drawable.abs),
         )
     )
     private val _zenCategory = MutableStateFlow<List<Category>>(
         listOf(
-            Category("6", "Meditation", false, Icons.Default.AccountBox),
-            Category("7", "Breathing", false, Icons.Default.AccountBox),
-            Category("8", "Mindfulness", false, Icons.Default.AccountBox),
-            Category("9", "Yoga", false, Icons.Default.AccountBox),
-            Category("10", "Stretching", false, Icons.Default.AccountBox),
-            Category("11", "Gaming", false, Icons.Default.AccountBox),
+            Category("6", "Meditation", false, R.drawable.meditation),
+            Category("7", "Breathing", false, R.drawable.breathing),
+            Category("8", "Mindfulness", false, R.drawable.mindfullness),
+            Category("9", "Yoga", false, R.drawable.yoga),
+            Category("10", "Stretching", false, R.drawable.stretching),
+            Category("11", "Gaming", false, R.drawable.gaming),
         )
     )
 
@@ -81,6 +86,32 @@ class CategoryViewModel @Inject constructor() : ViewModel() {
 
         suspend fun updateSelectedCategoryIds(ids: List<String>) {
             _selectedCategoryIds.emit(ids)
+        }
+    }
+
+
+    private val _userName = MutableStateFlow("") // Default value
+    val userName: StateFlow<String> = _userName.asStateFlow()
+
+
+    private fun getCurrentUserId(): String {
+        return FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    }
+    suspend fun fetchUserName() {
+        val userId = getCurrentUserId()
+        val db = FirebaseFirestore.getInstance()
+
+        try {
+            Log.d("Firestore", "Fetching user name for ID: $userId")
+            val documentSnapshot = db.collection("Users").document(userId).get().await()
+            val fetchedName = documentSnapshot.getString("name") // Use a different variable name here
+            Log.d("Firestore", "Fetched name: $fetchedName")
+
+            // Update the _userName StateFlow
+            _userName.value = fetchedName ?: "User Not Found"
+        } catch (e: Exception) {
+            Log.e("Firestore", "Error fetching user name", e)
+            _userName.value = "Error Fetching User" // Update StateFlow on error
         }
     }
 }

@@ -8,7 +8,9 @@ data class TrainingLog(
     val workoutPlanId: String,
     val exercises: List<ExerciseDetail>,
     val isDetailsVisible: Boolean = false
-)
+){
+    constructor() : this("", Date(), "", emptyList())
+}
 
 data class ExerciseDetail(
     val exerciseId: String,
@@ -17,3 +19,6 @@ data class ExerciseDetail(
     val reps: Int = 0,
     val weight: Float = 0f
 )
+{
+    constructor() : this("", "", 0, 0, 0f)
+}

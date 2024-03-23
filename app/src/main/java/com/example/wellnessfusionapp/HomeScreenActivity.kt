@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -42,6 +43,9 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -51,6 +55,8 @@ import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -67,6 +73,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -74,12 +81,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.wellnessfusionapp.Models.Goal
 import com.example.wellnessfusionapp.Navigation.BottomNavBar
 import com.example.wellnessfusionapp.ViewModels.CategoryViewModel
 import com.example.wellnessfusionapp.ViewModels.MainViewModel
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -87,7 +102,9 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     navController: NavController,
     viewModel: CategoryViewModel,
-    exerciseId: String
+    viewModel2: MainViewModel,
+    exerciseId: String,
+    userId: String
 ) {
     val gradientBrush = Brush.verticalGradient(
         colors = listOf(
@@ -109,6 +126,13 @@ fun HomeScreen(
     )
 
 
+    val userName by viewModel.userName.collectAsState()
+    val userProfilePictureUrl by viewModel2.profilePictureUrl.collectAsState()
+
+
+    LaunchedEffect(userId) {
+        viewModel.fetchUserName()
+    }
 
     Scaffold(
 
@@ -120,7 +144,7 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.Black)
-                    .height(55.dp),
+                    .height(65.dp),
                 title = {
                 },
 
@@ -128,33 +152,49 @@ fun HomeScreen(
 
                     Row(
                         modifier =
-                        Modifier.padding(5.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        Modifier.padding(6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
-                                .width(90.dp)
-                                .height(90.dp)
+                                .width(50.dp)
+                                .height(50.dp)
                                 .clip(CircleShape)
                                 .clickable { navController.navigate("UserProfile") }
                         ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+
+                            val painter = if (userProfilePictureUrl != null) {
+                                rememberAsyncImagePainter(model = userProfilePictureUrl)
+                            } else {
+                                painterResource(id = R.drawable.ic_launcher_foreground)
+                            }
+
+                            Image(
+                                painter = painter,
                                 contentDescription = "Profile Picture",
                                 modifier = Modifier
-                                    .fillMaxSize()
+                                    .width(100.dp)
+                                    .height(100.dp)
+                                    .border(2.5.dp, Color.Black, CircleShape),
+                                contentScale = ContentScale.Crop
                             )
                         }
                         // Text for user's name and welcome message integrated directly beside the profile icon
                         Column(
-                            modifier = Modifier
-                                .padding(start = 35.dp)
+                            modifier = Modifier.padding(start = 40.dp)
                         ) {
-                            Text(text = "Hello User", style = MaterialTheme.typography.titleMedium)
                             Text(
-                                text = "Welcome to Wellness Fusion",
-                                style = MaterialTheme.typography.bodySmall
+                                text = "Hi, $userName",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontFamily = fontTest
+                            )
+                            Text(
+                                text = "Welcome",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontFamily = fontTest
+
                             )
                         }
 
@@ -191,10 +231,11 @@ fun HomeScreen(
                         .padding(10.dp)
                 ) {
                     Text(
-                        text = "Workout Planner",
+                        text = "Get Started, Create Your Plan",
                         style = MaterialTheme.typography.titleLarge,
                         color = Color(0xffFE7316),
-                        fontFamily = fontTest
+                        fontFamily = fontTest,
+                        fontSize = 19.sp
                     )
                     HorizontalDivider()
                 }
@@ -229,7 +270,7 @@ fun HomeScreen(
                                 contentDescription = "Physical",
                                 modifier = Modifier
                                     .height(120.dp) // Adjust size as needed
-                                    .clickable(onClick = { navController.navigate("physicalCategory") }
+                                    .clickable(onClick = { navController.navigate("savedWorkoutPlans") }
                                     ))
 
                         }
@@ -237,7 +278,7 @@ fun HomeScreen(
                             modifier = Modifier
                                 .width(120.dp)
                                 .padding(top = 10.dp)
-                        ){
+                        ) {
                             Box(
                                 modifier = Modifier
                                     .matchParentSize()
@@ -250,8 +291,7 @@ fun HomeScreen(
                             Column(
                                 modifier = Modifier
                                     .align(Alignment.Center)
-                                    .clip(shape = CircleShape)
-                                ,
+                                    .clip(shape = CircleShape),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text("Physical", color = Color(0xffFE7316))
@@ -289,7 +329,7 @@ fun HomeScreen(
                                 contentDescription = "Mental",
                                 modifier = Modifier
                                     .height(120.dp) // Adjust size as needed
-                                    .clickable(onClick = { navController.navigate("zenCategory") }
+                                    .clickable(onClick = { navController.navigate("savedWorkoutPlans") }
                                     ))
                         }
                         Box(
@@ -329,17 +369,34 @@ fun HomeScreen(
                         .fillMaxWidth()
                         .padding(10.dp)
                 ) {
-
+                    Row (
+                        modifier = Modifier
+                            .fillMaxWidth()
+                        ,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ){
                         Text(
-                            "Personal Goals",
+                            "Active Goals",
                             style = MaterialTheme.typography.titleLarge,
                             color = Color(0xffFE7316),
                             fontFamily = fontTest
                         )
-                        HorizontalDivider()
+                        IconButton(
+                            onClick = { navController.navigate("goalScreen") }
+                        ) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Add a goal",
+                                tint = Color(0xffFE7316),
+                            )
+                        }
+                    }
+                    HorizontalDivider()
 
                     Spacer(modifier = Modifier.height(15.dp))
                     GoalsDashboard(viewModel = MainViewModel(), navController = navController)
+                    Spacer(modifier = Modifier.height(15.dp))
+
                 }
 
             }
@@ -348,36 +405,37 @@ fun HomeScreen(
 
 }
 
+
 @Composable
 fun GoalsDashboard(viewModel: MainViewModel, navController: NavController) {
     val goals by viewModel.goals.observeAsState(initial = emptyList())
     var goalToUpdate by remember { mutableStateOf<Goal?>(null) }
 
-    Box {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .alpha(0.9f),
-            colors = CardColors(
-                Color.Black,
-                Color(0xFF0d1f2d),
-                Color(0xFF5c7a92),
-                Color(0xFF0d1f2d)
-            )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .alpha(0.9f),
+        colors = CardColors(
+            Color.Black,
+            Color.Black,
+            Color.Black,
+            Color.Black
+        )
 
 
-        ) {
-            LazyRow {
-                items(goals) { goal ->
-                    GoalItem(
-                        goal = goal,
-                        navController = navController,
-                        onUpdateClick = { goalToUpdate = it }
-                    )
-                }
+    ) {
+        LazyRow {
+            items(goals) { goal ->
+                GoalItem(
+                    goal = goal,
+                    navController = navController,
+                    onUpdateClick = { goalToUpdate = it }
+                )
             }
         }
     }
+
 
     // Mostra o UpdateGoalDialog se goalToUpdate não for null
     goalToUpdate?.let { goal ->
@@ -436,7 +494,7 @@ fun GoalItem(
     navController: NavController,
     onUpdateClick: (Goal) -> Unit // Callback quando o botão de atualizar é clicado
 ) {
-    val progress = calculateProgress(goal.currentValue.toFloat(), goal.desiredValue.toFloat())
+    val progress = calculateProgress(goal.currentValue.toFloat(), goal.initialValue.toFloat(), goal.desiredValue.toFloat())
 
     Column(
         modifier = Modifier
@@ -457,7 +515,8 @@ fun GoalItem(
                     .width(130.dp)
                     .height(130.dp),
                 color = Color(0xffFE7316),
-                strokeWidth = 8.dp,
+                strokeWidth = 9.dp,
+                trackColor = Color(0xff5c7a92),
             )
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -474,7 +533,7 @@ fun GoalItem(
                         fontWeight = FontWeight.Bold,
                         color = Color(0xffFE7316)
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "${(progress * 100).toInt()}%",
                         style = MaterialTheme.typography.bodySmall,
@@ -488,8 +547,13 @@ fun GoalItem(
     }
 }
 
-private fun calculateProgress(current: Float, target: Float): Float {
-    return (current / target).coerceIn(0f, 1f) // Garante que o progresso está entre 0 e 1
+fun calculateProgress(current: Float, initial: Float, target: Float): Float {
+    // Ensure no division by zero and logical target > initial
+    if (target <= initial) return 1f
+    val adjustedCurrent = current - initial
+    val range = target - initial
+    val progress = adjustedCurrent / range
+    return progress.coerceIn(0f, 1f) // Ensure the progress is between 0% and 100%
 }
 
 
