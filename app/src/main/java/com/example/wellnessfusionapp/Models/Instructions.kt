@@ -5,7 +5,9 @@ package com.example.wellnessfusionapp.Models
 
 
 data class Instructions(
-    val musclesWorked: String = "",
+    val musclesPrimary: String = "",
+    val musclesSecondary: String = "",
+    val musclesWorkedImage : String = "",
     val instructions: String = "",
     val videoUrl: String = "",
     val imageUrl: String = "",

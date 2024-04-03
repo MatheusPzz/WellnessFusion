@@ -46,7 +46,6 @@ import java.util.Locale
 @Composable
 fun AchievedGoals(navController: NavController, viewModel: MainViewModel) { // Removed the unnecessary `goal: Goal` parameter
     val completedGoals = viewModel.completedGoals.observeAsState(listOf()).value // Access the `.value`
-
     Scaffold(
         topBar = {
             TopAppBar(

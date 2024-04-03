@@ -24,22 +24,22 @@ import javax.inject.Inject
 class CategoryViewModel @Inject constructor() : ViewModel() {
     private val _physicalCategory = MutableStateFlow<List<Category>>(
         listOf(
-            Category("0", "Chest", false, R.drawable.chest),
-            Category("1", "Arms", false, R.drawable.arms),
-            Category("2", "Back", false, R.drawable.backs),
-            Category("3", "Legs", false, R.drawable.legs),
-            Category("4", "Shoulders", false, R.drawable.shoulders),
-            Category("5", "Abs", false, R.drawable.abs),
+            Category("0", "Chest", false, R.drawable.chest_category, WorkoutType.PHYSICAL),
+            Category("1", "Arms", false, R.drawable.arms_category, WorkoutType.PHYSICAL),
+            Category("2", "Back", false, R.drawable.back_category, WorkoutType.PHYSICAL),
+            Category("3", "Legs", false, R.drawable.leg_category, WorkoutType.PHYSICAL),
+            Category("4", "Shoulders", false, R.drawable.shoulder_category, WorkoutType.PHYSICAL),
+            Category("5", "Abs", false, R.drawable.abs_category, WorkoutType.PHYSICAL),
         )
     )
     private val _zenCategory = MutableStateFlow<List<Category>>(
         listOf(
-            Category("6", "Meditation", false, R.drawable.meditation),
-            Category("7", "Breathing", false, R.drawable.breathing),
-            Category("8", "Mindfulness", false, R.drawable.mindfullness),
-            Category("9", "Yoga", false, R.drawable.yoga),
-            Category("10", "Stretching", false, R.drawable.stretching),
-            Category("11", "Gaming", false, R.drawable.gaming),
+            Category("6", "Meditation", false, R.drawable.meditation, WorkoutType.ZEN),
+            Category("7", "Breathing", false, R.drawable.breathing, WorkoutType.ZEN),
+            Category("8", "Mindfulness", false, R.drawable.mindfullness, WorkoutType.ZEN),
+            Category("9", "Yoga", false, R.drawable.yoga, WorkoutType.ZEN),
+            Category("10", "Stretching", false, R.drawable.stretching, WorkoutType.ZEN),
+            Category("11", "Gaming", false, R.drawable.gaming, WorkoutType.ZEN),
         )
     )
 

@@ -1,10 +1,14 @@
 package com.example.wellnessfusionapp
 
+import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import coil.compose.rememberImagePainter
+import androidx.compose.foundation.Image
+
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,6 +22,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardElevation
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,11 +41,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.ImageLoader
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
 import com.example.wellnessfusionapp.Models.Instructions
 import com.example.wellnessfusionapp.ViewModels.MainViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
@@ -78,24 +90,20 @@ fun InstructionScreen(exerciseId: String, viewModel: MainViewModel, navControlle
             }
         }
         ) { paddingValues ->
-            LazyColumn() {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(paddingValues)
+            ) {
 
                 item {
                     Column(
                         modifier = Modifier
-                            .padding(paddingValues)
                             .fillMaxSize(),
                         verticalArrangement = Arrangement.SpaceAround,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        AsyncImage(
-                            model = instruction.imageUrl,
-                            contentDescription = "Exercise Image",
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(400.dp),
-                            contentScale = ContentScale.FillWidth
-                        )
+                        AnimatedGif(imageUrl = instruction.imageUrl)
                         Spacer(modifier = Modifier.size(10.dp))
                         MuscleWorkedSection(instruction)
                         Spacer(modifier = Modifier.size(10.dp))
@@ -111,60 +119,98 @@ fun InstructionScreen(exerciseId: String, viewModel: MainViewModel, navControlle
 
     }
 }
+@Composable
+fun AnimatedGif (imageUrl: String) {
+    val imageLoader = ImageLoader.Builder(LocalContext.current)
+        .components {
+            if (Build.VERSION.SDK_INT >= 28) {
+                add(ImageDecoderDecoder.Factory())
+            } else {
+                add(GifDecoder.Factory())
+            }
+        }
+        .build()
+
+    val painter = rememberImagePainter(
+        data = imageUrl,
+        imageLoader = imageLoader,
+        builder = {
+            placeholder(R.drawable.ic_launcher_foreground)
+            error(R.drawable.ic_launcher_foreground)
+        })
+    Image(
+        painter = painter,
+        contentDescription = "Animated Gif",
+        contentScale = ContentScale.Fit,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(250.dp)
+    )
+}
 
 
 @Composable
 fun MuscleWorkedSection(instruction: Instructions) {
-    Column(
+    Card(
         modifier = Modifier
+            .fillMaxWidth()
             .padding(15.dp)
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.Start
+            .shadow(5.dp),
     ) {
-        Text("Target Muscles:")
-        Spacer (modifier = Modifier.size(15.dp))
-        Text(instruction.musclesWorked)
-        Row(
-            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly
+        Column(
+            modifier = Modifier
+                .padding(15.dp)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.Start
         ) {
-            AsyncImage(
-                model = instruction.imageUrl,
-                contentDescription = "Exercise Image",
-                modifier = Modifier
-                    .width(140.dp)
-                    .height(200.dp),
-            )
-            AsyncImage(
-                model = instruction.imageUrl,
-                contentDescription = "Exercise Image",
-                modifier = Modifier
-                    .width(140.dp)
-                    .height(200.dp),
-            )
+            Text("Target Muscles:")
+            Spacer(modifier = Modifier.size(15.dp))
+            Text(text = "Primary Muscles: ${instruction.musclesPrimary}")
+            Text(text = "Secondary Muscles: ${instruction.musclesSecondary}")
+            Spacer(modifier = Modifier.size(10.dp))
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                AsyncImage(
+                    model = instruction.musclesWorkedImage,
+                    contentDescription = "Muscles Worked",
+                    modifier = Modifier.size(250.dp)
+                )
+            }
+
+
         }
-
-
     }
 }
 
 @Composable
 fun InstructionsSection(instruction: Instructions) {
     val steps = instruction.instructions.split(".")
-    Column(
-        modifier = Modifier.padding(20.dp),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.Start
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(15.dp)
+            .shadow(5.dp),
     ) {
-        Text("Instructions:", style = MaterialTheme.typography.titleLarge)
-        Spacer(modifier =  Modifier.size(10.dp) )
-        steps.forEachIndexed { index, step ->
-            if (step.isNotBlank()) {
-                Row(
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Text("${index + 1} ", style = MaterialTheme.typography.titleMedium)
-                    Text(step.trim(), modifier = Modifier.padding(start = 8.dp))
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.Start
+        ) {
+            Text("Instructions:", style = MaterialTheme.typography.titleLarge)
+            Spacer(modifier = Modifier.size(10.dp))
+            steps.forEachIndexed { index, step ->
+                Spacer(modifier = Modifier.size(10.dp))
+                if (step.isNotBlank()) {
+                    Row(
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Text("${index + 1} ", style = MaterialTheme.typography.titleMedium)
+                        Text(step.trim(), modifier = Modifier.padding(start = 8.dp))
+                    }
                 }
             }
         }
@@ -178,23 +224,36 @@ fun ExtraContentSection(instruction: Instructions) {
             .fillMaxSize()
             .padding(16.dp),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-            Text("Sets: ${instruction.sets}")
-            Text("Reps: ${instruction.reps}")
+        Card (
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(5.dp),
+        ){
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(10.dp),
+
+                ) {
+                Text("Sets: ${instruction.sets}")
+                Text("Reps: ${instruction.reps}")
+                Text("Weight: ${instruction.weight} Kg for beginners")
+            }
         }
+        Spacer(modifier = Modifier.size(20.dp))
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .shadow(5.dp),
+        ){
         Column(
             modifier = Modifier
-                .padding(0.dp)
+                .padding(10.dp)
                 .fillMaxSize(),
             verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Extra Content: ${instruction.videoUrl}")
+            Text("Professional Content: ${instruction.videoUrl}")
         }
+            }
     }
 }
 

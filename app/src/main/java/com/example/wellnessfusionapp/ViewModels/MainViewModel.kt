@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
 import com.example.wellnessfusionapp.Models.Exercise
 import com.example.wellnessfusionapp.Models.ExerciseDetail
 import com.example.wellnessfusionapp.Models.Goal
@@ -42,6 +43,27 @@ class MainViewModel @Inject constructor() : ViewModel() {
         fetchSavedLogs()
         fetchUserProfilePicture()
         fetchCompletedGoals()
+    }
+
+
+    // Login and sign up sections:
+
+    private val auth = FirebaseAuth.getInstance()
+    val snackbarMessage = MutableStateFlow("")
+
+    fun registerUser(name: String, email: String, password: String, confirmPassword: String, navController: NavController) {
+        val emailPattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+"
+
+        when {
+            email.isBlank() || password.isBlank() || confirmPassword.isBlank() -> snackbarMessage.value = "Please fill in all fields"
+            !email.matches(emailPattern.toRegex()) -> snackbarMessage.value = "Invalid email format"
+            password != confirmPassword -> snackbarMessage.value = "Passwords do not match"
+            else -> createUser(email, password, name, navController)
+        }
+    }
+
+    private fun createUser(email: String, password: String, name: String, navController: NavController) {
+        // Firebase user creation logic
     }
 
     private val _instructions = MutableLiveData<Instructions>()
@@ -142,6 +164,7 @@ class MainViewModel @Inject constructor() : ViewModel() {
             }
         }
     }
+
     fun clearSelectedWorkoutPlans() {
         _workoutPlans.value = emptyList()
     }
@@ -181,8 +204,9 @@ class MainViewModel @Inject constructor() : ViewModel() {
             FirebaseFirestore.getInstance().collection("Users").document(userId)
                 .collection("UserProfile").document(userId)
                 .collection("TrainingLogs").add(logEntry)
-                .addOnSuccessListener { documentReference ->
+                .addOnSuccessListener {
                     Log.d("Save Log", "Training log saved successfully")
+                    Log.d("SaveLog", "Saving log with details: $exerciseLogs")
                     // Chamar a função para atualizar as metas
                     updateGoalsBasedOnLog(exerciseLogs, userId)
                     fetchSavedLogs()
@@ -232,7 +256,7 @@ class MainViewModel @Inject constructor() : ViewModel() {
             .addOnSuccessListener {
                 Log.d("UpdateGoal", "Goal successfully updated")
                 // Após a atualização da meta, salvar o progresso
-                saveProgressUpdate(updatedGoal.id, updatedGoal.currentValue.toFloat())
+                saveProgressUpdate(updatedGoal.id, updatedGoal.currentValue)
             }
             .addOnFailureListener { e ->
                 Log.e("UpdateGoal", "Error updating goal", e)
@@ -267,7 +291,7 @@ class MainViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    fun saveProgressUpdate(goalId: String, newValue: Float) {
+    fun saveProgressUpdate(goalId: String, newValue: Int) {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         val progressUpdate = mapOf(
             "date" to Timestamp.now(),
@@ -307,17 +331,18 @@ class MainViewModel @Inject constructor() : ViewModel() {
     fun toggleLogDetails(logName: String) {
         val updatedLogs = _savedLogs.value?.map { log ->
             if (log.logName == logName) {
-                // Log para depuração
-                Log.d("ToggleLogDetails", "Toggling visibility for log: $logName")
                 log.copy(isDetailsVisible = !log.isDetailsVisible)
             } else {
                 log
             }
+
         }
         _savedLogs.postValue(updatedLogs!!)
     }
 
-
+    fun getTrainingLog(logName: String): TrainingLog? {
+        return _savedLogs.value?.find { it.logName == logName }
+    }
 
 
 // Deletar e editar logs
@@ -380,7 +405,7 @@ class MainViewModel @Inject constructor() : ViewModel() {
                             exerciseName = exerciseMap["exerciseName"] as? String ?: "",
                             sets = (exerciseMap["sets"] as? Long)?.toInt() ?: 0,
                             reps = (exerciseMap["reps"] as? Long)?.toInt() ?: 0,
-                            weight = (exerciseMap["weight"] as? Double)?.toFloat() ?: 0f
+                            weight = (exerciseMap["weight"] as? Long)?.toInt() ?: 0
                         )
                     }
                     logsList.add(
@@ -396,6 +421,7 @@ class MainViewModel @Inject constructor() : ViewModel() {
             _savedLogs.value = logsList
         }
     }
+
     fun addGoal(goal: Goal) {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
@@ -437,7 +463,8 @@ class MainViewModel @Inject constructor() : ViewModel() {
                     return@addSnapshotListener
                 }
 
-                val activeGoalsList = value?.mapNotNull { it.toObject(Goal::class.java) } ?: listOf()
+                val activeGoalsList =
+                    value?.mapNotNull { it.toObject(Goal::class.java) } ?: listOf()
                 _goals.value = activeGoalsList
             }
     }
@@ -458,7 +485,7 @@ class MainViewModel @Inject constructor() : ViewModel() {
                     exercise?.let { exerciseList.add(it) }
                 }
                 withContext(Dispatchers.Main) {
-                   Log.d("ViewModel", "Exercises fetched successfully")
+                    Log.d("ViewModel", "Exercises fetched successfully")
                     Log.d("ViewModel", "Fetched ${exerciseList.size} exercises")
                     _exercisesForDropdown.value = exerciseList
                 }
@@ -483,6 +510,7 @@ class MainViewModel @Inject constructor() : ViewModel() {
     fun clearGoalCompletionEvent() {
         _goalCompletionEvent.value = null
     }
+
     private fun checkAndCompleteGoal(goalId: String) {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         viewModelScope.launch {
@@ -501,7 +529,13 @@ class MainViewModel @Inject constructor() : ViewModel() {
                                 Log.d("GoalStatus", "Goal successfully marked as completed")
                                 _goalCompletionEvent.postValue(goal)
                             }
-                            .addOnFailureListener { e -> Log.e("GoalStatus", "Error updating goal status", e) }
+                            .addOnFailureListener { e ->
+                                Log.e(
+                                    "GoalStatus",
+                                    "Error updating goal status",
+                                    e
+                                )
+                            }
                     }
                 }
             }
@@ -524,7 +558,8 @@ class MainViewModel @Inject constructor() : ViewModel() {
                     }
 
 
-                    val completedGoalsList = value?.mapNotNull { it.toObject(Goal::class.java) } ?: listOf()
+                    val completedGoalsList =
+                        value?.mapNotNull { it.toObject(Goal::class.java) } ?: listOf()
                     _completedGoals.postValue(completedGoalsList)
                 }
         }
@@ -602,14 +637,15 @@ class MainViewModel @Inject constructor() : ViewModel() {
 //    }
 
 
-
-
-
-
     private val _profilePictureUrl = MutableStateFlow<String?>(null)
     val profilePictureUrl = _profilePictureUrl.asStateFlow()
-    fun updateUserProfilePicture(imageUri: Uri, userId: String, onComplete: (Boolean, String) -> Unit) {
-        val storageRef = FirebaseStorage.getInstance().reference.child("profile_pictures/$userId.jpg")
+    fun updateUserProfilePicture(
+        imageUri: Uri,
+        userId: String,
+        onComplete: (Boolean, String) -> Unit
+    ) {
+        val storageRef =
+            FirebaseStorage.getInstance().reference.child("profile_pictures/$userId.jpg")
         val uploadTask = storageRef.putFile(imageUri)
         if (FirebaseAuth.getInstance().currentUser == null) {
             onComplete(false, "No authenticated user.")
@@ -627,7 +663,8 @@ class MainViewModel @Inject constructor() : ViewModel() {
             if (task.isSuccessful) {
                 val downloadUri = task.result
                 val db = FirebaseFirestore.getInstance()
-                db.collection("Users").document(userId).update("profile_picture", downloadUri.toString())
+                db.collection("Users").document(userId)
+                    .update("profile_picture", downloadUri.toString())
                     .addOnSuccessListener {
                         onComplete(true, "Profile picture updated successfully.")
                         fetchUserProfilePicture()
@@ -641,7 +678,7 @@ class MainViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    private fun fetchUserProfilePicture() {
+    fun fetchUserProfilePicture() {
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
         val db = FirebaseFirestore.getInstance()
         db.collection("Users").document(userId).get()
@@ -663,7 +700,8 @@ class MainViewModel @Inject constructor() : ViewModel() {
         try {
             Log.d("Firestore", "Fetching user name for ID: $userId")
             val documentSnapshot = db.collection("Users").document(userId).get().await()
-            val fetchedName = documentSnapshot.getString("name") // Use a different variable name here
+            val fetchedName =
+                documentSnapshot.getString("name") // Use a different variable name here
             Log.d("Firestore", "Fetched name: $fetchedName")
 
             // Update the _userName StateFlow
@@ -673,6 +711,7 @@ class MainViewModel @Inject constructor() : ViewModel() {
             _userName.value = "Error Fetching User" // Update StateFlow on error
         }
     }
+
     fun updateUserName(userId: String, newName: String, onComplete: (Boolean, String) -> Unit) {
         if (FirebaseAuth.getInstance().currentUser == null) {
             onComplete(false, "No authenticated user.")
@@ -725,9 +764,7 @@ class MainViewModel @Inject constructor() : ViewModel() {
 }
 
 
-
-
-    // Goals System
+// Goals System
 
 //    private val _userGoals = MutableLiveData<List<Goal>>(emptyList())
 //

@@ -52,6 +52,8 @@ import com.example.wellnessfusionapp.ViewModels.CategoryViewModel
 import com.example.wellnessfusionapp.CreatedPlan
 import com.example.wellnessfusionapp.GoalProgressRecordScreen
 import com.example.wellnessfusionapp.GoalScreen
+import com.example.wellnessfusionapp.LogDetails
+import com.example.wellnessfusionapp.Models.TrainingLog
 import com.example.wellnessfusionapp.ProfileScreen
 import com.example.wellnessfusionapp.R
 import com.example.wellnessfusionapp.R.drawable.icon_home_filled
@@ -105,7 +107,6 @@ fun MainNavHost(
                 navController,
                 categoryViewModel,
                 mainViewModel,
-//                viewModel2 = mainViewModel,
                 exerciseId = exerciseId,
                 userId = userId
             )
@@ -124,14 +125,12 @@ fun MainNavHost(
             PhysicalCategoryScreen(
                 navController,
                 categoryViewModel,
-                title = String()
             )
         }
         composable("zenCategory") {
             ZenCategoryScreen(
                 navController,
                 categoryViewModel,
-                title = String()
             )
         }
         composable(
@@ -169,6 +168,7 @@ fun MainNavHost(
                 backStackEntry.arguments?.getString("workoutPlanId") ?: return@composable
             CreatedPlan(
                 workoutPlanId = workoutPlanId,
+                exerciseId = exerciseId,
                 navController = navController,
                 viewModel = generatedWorkoutViewModel,
                 mainViewModel = mainViewModel
@@ -190,6 +190,17 @@ fun MainNavHost(
         }
         composable("AchievedGoals"){
             AchievedGoals(navController = navController, viewModel = mainViewModel)
+        }
+        composable(
+            "logDetails/{logName}",
+            arguments = listOf(navArgument("logName") { type = NavType.StringType })
+        )
+        { backStackEntry ->
+            val logName = backStackEntry.arguments?.getString("logName") ?: ""
+            val log = mainViewModel.getTrainingLog(logName)
+            if (log != null) {
+                LogDetails(log, navController, mainViewModel)
+            }
         }
     }
 }

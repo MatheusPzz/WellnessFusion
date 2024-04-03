@@ -1,6 +1,9 @@
 package com.example.wellnessfusionapp
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateSizeAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -20,6 +23,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -30,6 +34,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CardElevation
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -40,6 +46,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -57,9 +65,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.wellnessfusionapp.Models.Exercise
@@ -72,6 +84,10 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedWorkoutsScreen(viewModel: GeneratedWorkoutViewModel, navController: NavController) {
+
+    val textFont = FontFamily(
+        Font(R.font.zendots_regular)
+    )
     val savedWorkouts by viewModel.savedWorkouts.observeAsState(listOf())
 
     LaunchedEffect(Unit) {
@@ -79,48 +95,143 @@ fun SavedWorkoutsScreen(viewModel: GeneratedWorkoutViewModel, navController: Nav
     }
 
     Scaffold(
+        containerColor = Color(0xff383838),
         topBar = {
-            TopAppBar(title = {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-
-                ) {
-                    Row(
-                        modifier = Modifier.width(200.dp),
-                        horizontalArrangement = Arrangement.Start
-                    ) {
-                        Text("Workout Plans")
-                    }
-                    ButtonPhysical(navController)
-                    MentalButton(navController)
-                }
-            })
+            TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Black.copy(alpha = 0.7f)
+                ),
+                title = {
+                        Text(
+                            text = "Your Workout Plans",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = Color.White,
+                            textAlign = TextAlign.Center,
+                            fontFamily = textFont
+                        )
+                },
+            )
         },
         bottomBar = { BottomNavBar(navController) }
 
     ) { paddingValues ->
         if (savedWorkouts.isEmpty()) {
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                contentAlignment = Alignment.Center
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("No saved workout plans", style = MaterialTheme.typography.bodyMedium)
+                Text("No saved workout plans, Create one!", style = MaterialTheme.typography.bodyMedium, color = Color.White, fontFamily = textFont)
+                Row {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            ButtonPhysical(navController)
+                            Text(
+                                "Physical",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White,
+                                fontFamily = textFont
+                            )
+                        }
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            MentalButton(navController)
+                            Text(
+                                "Mental",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White,
+                                fontFamily = textFont
+                            )
+                        }
+                }
             }
         } else {
-            LazyColumn(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight()
-                    .padding(paddingValues)
-
-            )
-            {
-                items(savedWorkouts) { workout ->
-                    WorkoutCard(workout, viewModel, navController)
+                    .fillMaxSize()
+                    .padding(paddingValues),
+            ) {
+                Text(
+                    modifier = Modifier.padding(start = 16.dp, top = 16.dp),
+                    text = "Create your plan now!",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Color.White,
+                    fontFamily = textFont
+                )
+                HorizontalDivider(Modifier.padding(start = 16.dp, end = 16.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
+                    ) {
+                Row (
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                ){
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            ButtonPhysical(navController)
+                            Text(
+                                "Physical",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White,
+                                fontFamily = textFont,
+                                fontSize = 20.sp
+                            )
+                        }
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            MentalButton(navController)
+                            Text(
+                                "Mental",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.White,
+                                fontFamily = textFont,
+                                fontSize = 20.sp
+                            )
+                        }
+                    }
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "List of Existing Plans",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color.White,
+                        fontFamily = textFont
+                    )
+                    HorizontalDivider()
+                }
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(2.dp)
+                        .fillMaxHeight(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                    )
+                {
+                    items(savedWorkouts) { workout ->
+                        WorkoutCard(workout, viewModel, navController)
+                        Text(
+                            text = "Swipe left or right to view more exercises",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.White,
+                            modifier = Modifier.padding(12.dp),
+                            fontFamily = MaterialTheme.typography.bodySmall.fontFamily
+                        )
+                    }
                 }
             }
         }
@@ -134,54 +245,88 @@ fun EditButton(workoutPlanId: String, currentName: String, viewModel: GeneratedW
     var newName by remember { mutableStateOf(currentName) }
     val exercises by remember { mutableStateOf(emptyList<Exercise>()) }
 
+    Box(
+        modifier = Modifier
+            .size(50.dp)
+            .clip(CircleShape)
+            .background(Color.DarkGray.copy(alpha = 0.9f))
+    ) {
 
-    IconButton(onClick = { showDialog = true }) {
-        Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit Plan")
-    }
+        IconButton(onClick = { showDialog = true }) {
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = "Edit Plan",
+                tint = Color.White
+            )
+        }
 
-    if (showDialog) {
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { Text("Edit Workout Plan Name") },
-            text = {
-                OutlinedTextField(
-                    value = newName,
-                    onValueChange = { newName = it },
-                    label = { Text("New Name") }
-                )
-            },
-            confirmButton = {
-                Button(onClick = {
-                    if (newName.isNotBlank()) {
-                        viewModel.updateWorkoutPlanName(workoutPlanId, newName)
-                        showDialog = false
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = { Text("Edit Workout Plan Name") },
+                text = {
+                    OutlinedTextField(
+                        value = newName,
+                        onValueChange = { newName = it },
+                        label = { Text("New Name") }
+                    )
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        if (newName.isNotBlank()) {
+                            viewModel.updateWorkoutPlanName(workoutPlanId, newName)
+                            showDialog = false
+                        }
+                    }) {
+                        Text("Save")
                     }
-                }) {
-                    Text("Save")
+                },
+                dismissButton = {
+                    Button(onClick = { showDialog = false }) {
+                        Text("Cancel")
+                    }
                 }
-            },
-            dismissButton = {
-                Button(onClick = { showDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
+            )
+        }
     }
 }
 
 @Composable
 fun DeleteButton(workoutPlanId: String, viewModel: GeneratedWorkoutViewModel) {
-    IconButton(onClick = { viewModel.deleteWorkoutPlan(workoutPlanId) }) {
-        Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete Workout Plan")
+    Box(
+        modifier = Modifier
+            .size(50.dp)
+            .clip(CircleShape)
+            .background(Color.DarkGray.copy(alpha = 0.9f))
+    ) {
+        IconButton(onClick = { viewModel.deleteWorkoutPlan(workoutPlanId) }) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Delete Workout Plan",
+                tint = Color.White
+            )
+        }
     }
 }
 
 @Composable
 fun PlayButton(navController: NavController, workout: WorkoutPlan) {
-    IconButton(onClick = { navController.navigate("createdPlans/${workout.workoutPlanId}") }) {
-        Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Play Workout Plan")
+    Box(
+        modifier = Modifier
+            .size(50.dp)
+            .clip(CircleShape)
+            .background(Color.DarkGray.copy(alpha = 0.9f))
+    ) {
+        IconButton(onClick = { navController.navigate("createdPlans/${workout.workoutPlanId}") }) {
+            Icon(
+                imageVector = Icons.Default.PlayArrow,
+                contentDescription = "Play Workout Plan",
+                tint = Color.White
+            )
+        }
     }
 }
+
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalPagerApi::class)
 @Composable
@@ -192,53 +337,225 @@ fun WorkoutCard(
 ) {
     var exercisesDetails by remember { mutableStateOf<List<Exercise>>(listOf()) }
 
+    var isExpanded by remember { mutableStateOf(false) }
+    val clickModifier = Modifier.clickable { isExpanded = !isExpanded }
+    val pagerState = rememberPagerState()
+    // ... your existing code ...
+
     LaunchedEffect(workout.exercises) {
         viewModel.fetchExercisesDetails(workout.exercises) { exercises ->
             exercisesDetails = exercises
         }
     }
-    //
-    Card(modifier = Modifier
-        .padding(16.dp)
-        .clickable { }) {
-        Column(modifier = Modifier.padding(0.dp)) {
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Column(
-                    modifier = Modifier
-                        .width(180.dp)
-                        .padding(8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(text = workout.planName, style = MaterialTheme.typography.titleLarge)
-                }
-                PlayButton(navController, workout)
-                EditButton(workout.workoutPlanId, workout.planName, viewModel)
-                DeleteButton(workout.workoutPlanId, viewModel)
-            }
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(250.dp)
+            .padding(8.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 8.dp,
+        ),
+        border = BorderStroke(
+            width = 3.dp,
+            color = Color.Black.copy(alpha = 0.8f)
+        ),
+        colors = CardColors(
+            Color.Black.copy(alpha = 0.8f),
+            Color.Black.copy(alpha = 0.3f),
+            Color.Black.copy(alpha = 0.3f),
+            Color.Black.copy(alpha = 0.3f),
+        )
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
+    ) {
+        Column {
 
-            val pagerState = rememberPagerState()
+            // This is where we create a horizontal pager for exercises.
             HorizontalPager(
                 count = exercisesDetails.size,
                 state = pagerState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(260.dp)
+                    .height(250.dp) // Fixed height for each pager item
             ) { page ->
-                val exercise = exercisesDetails[page]
-                ExercisePage(exercise, navController)
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                        .background(Color.DarkGray) // Temporary background color for visibility
+                ) {
+                    // Load exercise image here
+                    AsyncImage(
+                        model = exercisesDetails[page].imageUrl,
+                        contentDescription = "Exercise Image",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(6.dp),
+                        horizontalArrangement = Arrangement.Absolute.Right,
+                    )
+                    {
+                        Row(
+                            modifier = Modifier
+                                .background(
+                                    Color.Black.copy(alpha = 0.4f),
+                                    CircleShape
+                                )
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            Text(
+                                text = "Number of Exercises: ",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xffFE7316).copy(alpha = 0.6f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = exercisesDetails.size.toString(),
+                                    color = Color.White,
+                                )
+                            }
+                        }
+                    }
+
+                    // Exercise information overlay
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .background(Color.Black.copy(alpha = 0.4f))
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 2.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .width(180.dp)
+                                    .padding(),
+                                horizontalAlignment = Alignment.Start,
+                            ) {
+                                Text(
+                                    text = workout.planName,
+                                    modifier = clickModifier
+                                        .animateContentSize()
+                                        .padding(0.dp), // Apply padding for better touch area, if needed
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = Color.White,
+                                    maxLines = if (isExpanded) Int.MAX_VALUE else 1, // Use Int.MAX_VALUE for no limit when expanded
+                                    overflow = TextOverflow.Ellipsis // Add ellipsis when text is truncated
+                                )
+                            }
+                            PlayButton(navController, workout)
+                            Spacer(modifier = Modifier.width(9.dp))
+                            EditButton(workout.workoutPlanId, workout.planName, viewModel)
+                            Spacer(modifier = Modifier.width(9.dp))
+                            DeleteButton(workout.workoutPlanId, viewModel)
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = exercisesDetails[page].name,
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = Color.White
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                        }
+                    }
+                }
             }
         }
     }
 }
+
+
+//@OptIn(ExperimentalFoundationApi::class, ExperimentalPagerApi::class)
+//@Composable
+//fun WorkoutCard(
+//    workout: WorkoutPlan,
+//    viewModel: GeneratedWorkoutViewModel,
+//    navController: NavController
+//) {
+//    var exercisesDetails by remember { mutableStateOf<List<Exercise>>(listOf()) }
+//
+//    var isExpanded by remember { mutableStateOf(false) }
+//    val clickModifier = Modifier.clickable { isExpanded = !isExpanded }
+//
+//    LaunchedEffect(workout.exercises) {
+//        viewModel.fetchExercisesDetails(workout.exercises) { exercises ->
+//            exercisesDetails = exercises
+//        }
+//    }
+//
+//    Card(
+//        modifier = Modifier
+//            .padding(16.dp)
+//    ) {
+//        Column() {
+//
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(8.dp),
+//                horizontalArrangement = Arrangement.SpaceBetween,
+//                verticalAlignment = Alignment.Top
+//            ) {
+//                Column(
+//                    modifier = Modifier
+//                        .width(180.dp)
+//                        .padding(8.dp),
+//                    horizontalAlignment = Alignment.CenterHorizontally
+//                ) {
+//                    Text(
+//                        text = workout.planName,
+//                        modifier = clickModifier
+//                            .animateContentSize()
+//                            .padding(0.dp), // Apply padding for better touch area, if needed
+//                        style = MaterialTheme.typography.titleLarge,
+//                        maxLines = if (isExpanded) Int.MAX_VALUE else 1, // Use Int.MAX_VALUE for no limit when expanded
+//                        overflow = TextOverflow.Ellipsis // Add ellipsis when text is truncated
+//                    )
+//                }
+//                PlayButton(navController, workout)
+//                EditButton(workout.workoutPlanId, workout.planName, viewModel)
+//                DeleteButton(workout.workoutPlanId, viewModel)
+//            }
+//            HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
+//
+//
+//            val pagerState = rememberPagerState()
+//            HorizontalPager(
+//                count = exercisesDetails.size,
+//                state = pagerState,
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//            ) { page ->
+//                val exercise = exercisesDetails[page]
+//                ExercisePage(exercise, navController)
+//            }
+//        }
+//    }
+//}
 
 @Composable
 fun ExercisePage(exercise: Exercise, navController: NavController) {
@@ -254,40 +571,13 @@ fun ExercisePage(exercise: Exercise, navController: NavController) {
             contentDescription = "Exercise Image",
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .height(160.dp)
+                .height(150.dp)
                 .fillMaxWidth()
         )
-        Column(
-            modifier = Modifier
-                .padding(10.dp)
-                .fillMaxSize()
-        ) {
 
-            Column(
-
-            ) {
-                Text(text = "Nome: ${exercise.name}", style = MaterialTheme.typography.bodyLarge)
-            }
-            Row(
-                modifier = Modifier
-                    .padding(0.dp)
-                    .fillMaxWidth()
-            ) {
-                Text(
-                    text = "Descrição: ${exercise.description}",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-
-            }
-            Column(
-
-            ) {
-                Text("Workout Counter: 0")
-            }
-        }
     }
 }
-// column out and row out
+
 
 @Composable
 fun ButtonPhysical(navController: NavController) {
@@ -298,8 +588,8 @@ fun ButtonPhysical(navController: NavController) {
     ) {
         Box(
             modifier = Modifier
-                .width(50.dp)
-                .height(50.dp)
+                .width(100.dp)
+                .height(100.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -331,8 +621,8 @@ fun MentalButton(navController: NavController) {
     ) {
         Box(
             modifier = Modifier
-                .width(50.dp)
-                .height(50.dp)
+                .width(100.dp)
+                .height(100.dp)
         ) {
             Box(
                 modifier = Modifier

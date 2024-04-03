@@ -131,6 +131,9 @@ class ExerciseSelectionViewModel @Inject constructor() : ViewModel() {
         return _selectedExercises.value.any { it.id == exercise.id }
     }
 
+    val hasSelectedExercises: Boolean
+        get() = _selectedExercises.value.isNotEmpty()
+
 
     /*retornando o id do usuario que esta logado na sessao usando firebase auth*/
     private fun getCurrentUserId(): String {

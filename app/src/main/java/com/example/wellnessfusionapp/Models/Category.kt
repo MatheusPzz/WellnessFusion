@@ -7,5 +7,6 @@ data class Category(
     val categoryId: String,
     val name: String,
     var isSelected: Boolean = false,
-    @DrawableRes val image: Int
+    val image: Int,
+    var type : WorkoutType
 )

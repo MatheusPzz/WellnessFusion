@@ -7,11 +7,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -59,7 +61,7 @@ import java.util.UUID
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GoalScreen(navController: NavController, viewModel: MainViewModel) {
-    val predefinedGoalTypes = listOf("Exercising Weight Progress", "Exercising Days Goal")
+    val predefinedGoalTypes = listOf("Exercising Weight Progress", "Meditation Time Progress")
     var selectedGoalType by remember { mutableStateOf<String?>(null) }
 
     Scaffold(topBar = { GoalScreenTopAppBar(navController) }) { innerPadding ->
@@ -169,29 +171,40 @@ fun GoalDetailScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(0.dp),
+            .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-        Text("Goal Type: $goalType", style = MaterialTheme.typography.titleLarge, fontSize = 21.sp)
+        Text(goalType, style = MaterialTheme.typography.titleLarge, fontSize = 21.sp)
+        Spacer(Modifier.height(10.dp))
 
-        if (goalType == "Exercising Days Goal") {
-            // Render text fields specific to attendance goals
-
-            OutlinedTextField(
-                value = desiredValue,
-                onValueChange = { desiredValue = it },
-                label = { Text("How Many Days: ") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
-            OutlinedTextField(
-                value = startDate.toDate().toString(),
-                onValueChange = { },
-                readOnly = true,
-                label = { Text("Start Date") },
-                modifier = Modifier.fillMaxWidth()
-            )
+        if (goalType == "Meditation Time Progress") {
+            // UI for setting meditation goal`
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(10.dp),
+            ) {
+                Text(
+                    "Meditation Time Goal:",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                // Desired meditation time
+                OutlinedTextField(
+                    value = initialValue,
+                    onValueChange = { initialValue = it },
+                    label = { Text("Current Meditation Time (minutes)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                OutlinedTextField(
+                    value = desiredValue,
+                    onValueChange = { desiredValue = it },
+                    label = { Text("Desired Meditation Time (minutes)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
 
         } else {
             Column(
@@ -270,13 +283,13 @@ fun GoalDetailScreen(
         Spacer(Modifier.height(10.dp))
 
         Button(onClick = {
-            if (goalType == "Exercising Days Goal" && desiredValue.isNotEmpty()) {
-                println("Attendance goal: $desiredValue days")
+            if (goalType == "Meditation Time Progress" && desiredValue.isNotEmpty()) {
+                println(": $desiredValue days")
                 val newGoal = Goal(
                     id = UUID.randomUUID().toString(),
                     type = GoalType(goalType, ""), // Create GoalType instance
                     typeId = "",
-                    description = "Attendance goal",
+                    description = selectedExercise?.name ?: "",
                     desiredValue = desiredValue.toInt(),
                     initialValue = initialValue.toInt(),
                     exerciseId = null,
@@ -308,7 +321,7 @@ fun GoalDetailScreen(
                 Log.d("GoalScreen", "Goal added")
                 onGoalAdded()
                 Log.d("GoalScreen", "onGoalAdded called")
-                navController.popBackStack()
+                navController.navigate("home")
             }
         }) {
             Text("Add Goal")

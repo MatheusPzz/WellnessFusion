@@ -1,4 +1,4 @@
-package com.example.wellnessfusionapp
+package com.example.wellnessfusionapp.Services
 
 import android.app.Application
 import androidx.compose.runtime.Composable

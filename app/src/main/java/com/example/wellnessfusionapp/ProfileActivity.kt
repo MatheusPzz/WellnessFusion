@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -67,6 +68,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -122,29 +124,28 @@ fun ProfileScreen(
         topBar = {
             CenterAlignedTopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFFFE7316)),
-                title = { Text(text = "Profile") },
+                title = { Text(text = "Profile", fontFamily = FontFamily(Font(R.font.zendots_regular))) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        navController.navigate("login")
-                        FirebaseAuth.getInstance().signOut()
-                    }) {
-                        Icon(imageVector = Icons.Filled.ExitToApp, contentDescription = "Sign Out")
-                    }
+
                 }
             )
         },
         bottomBar = { }
     ) { paddingValues ->
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier =
+        Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+        ) {
             // Background box for the entire screen
             Box(
                 modifier = Modifier
-                    .alpha(0.5f)
+//                    .alpha(0.5f)
                     .padding(paddingValues)
                     .fillMaxWidth()
                     .height(190.dp)// Use matchParentSize to cover the entire parent
@@ -152,7 +153,17 @@ fun ProfileScreen(
                         Color.Black,
                         shape = RoundedCornerShape(bottomEnd = 20.dp, bottomStart = 20.dp)
                     )
-            )
+            ){
+                // Background image
+                Image(
+                    painter = rememberImagePainter(R.drawable.background_profile_card),
+                    contentDescription = "Background Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(shape = RoundedCornerShape(bottomEnd = 20.dp, bottomStart = 20.dp))
+                )
+            }
 
             // Content of the screen
             Column(
@@ -163,15 +174,7 @@ fun ProfileScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
-                Column(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth()
-                ) {
-                    Text("Mental Workouts:", fontFamily = FontFamily(Font(R.font.zendots_regular)), color = Color.White)
-                    Text("Physical Workouts:", fontFamily = FontFamily(Font(R.font.zendots_regular)), color = Color.White)
-                }
-                Spacer(modifier = Modifier.height(15.dp))
+                Spacer(modifier = Modifier.height(100.dp))
                 ProfileCard(
                     viewModel = viewModel,
                     userName = userName,
@@ -183,24 +186,18 @@ fun ProfileScreen(
                     modifier = Modifier
                         .padding(16.dp)
                         .fillMaxWidth(),
-                    horizontalAlignment = Alignment.Start,
-                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Top
                 ) {
                     ProfileInfoFields(
                         userName = userName,
                         userEmail = userEmail,
                         context = context,
-                        viewModel = viewModel
+                        viewModel = viewModel,
+                        navController = navController
                     )
                 }
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    )
-                {
-                    SetGoalButton(navController = navController)
-                }
+
             }
         }
     }
@@ -210,26 +207,24 @@ fun ProfileScreen(
 
 @Composable
 fun SetGoalButton(navController: NavController) {
-    Row (
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, Color.Black, RoundedCornerShape(12.dp))
-            .padding(6.dp)
-            .clickable { navController.navigate("goalScreen") },
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+
         Text(
             "Add personal goals to keep track of your progress.",
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.Black,
+            color = Color(0xFFFE7316),
             fontSize = 13.sp
         )
-        IconButton(onClick = {}) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = "Add Goal", Modifier.fillMaxSize())
-
+        IconButton(
+            modifier = Modifier
+                .border(1.dp, Color(0xFFFE7316), RoundedCornerShape(10.dp))
+                .size(50.dp),
+            onClick = {
+            navController.navigate("goalScreen")
+        }) {
+            Icon(imageVector = Icons.Default.Add, contentDescription = "Add Goal", Modifier.fillMaxSize(), tint = Color.White)
         }
     }
-}
+
 
 @Composable
 fun ProfileCard(
@@ -251,10 +246,23 @@ fun ProfileCard(
                 .width(150.dp)
                 .height(150.dp)
                 .clip(CircleShape)
+                .alpha(0.9f)
                 .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                .clickable { onChangePictureClick() }
-
+                .clickable {
+                    onChangePictureClick()
+                }
+                .background(color = Color.Black, shape = CircleShape)
         ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .background(Color.White)
+            ){
+                Icon(
+                    imageVector = Icons.Default.Add, contentDescription = "Add Picture", tint = Color.Black,
+                )
+            }
             // Use Coil to load the image from URL
             Image(
                 painter = rememberAsyncImagePainter(userProfilePictureUrl),
@@ -267,7 +275,10 @@ fun ProfileCard(
         // User Name
         Text(
             text = userName,
-            style = MaterialTheme.typography.titleLarge
+            style = MaterialTheme.typography.titleLarge,
+            fontFamily = FontFamily(Font(R.font.zendots_regular)),
+            color = Color(0xFFFE7316),
+            fontWeight = FontWeight.Bold
         )
 
     }
@@ -279,7 +290,8 @@ fun ProfileInfoFields(
     viewModel: MainViewModel,
     userName: String,
     userEmail: String,
-    context: Context // Pass the context to show Toast messages
+    context: Context, // Pass the context to show Toast messages
+    navController: NavController
 ) {
     var editableUserName by remember { mutableStateOf(userName) }
     var isEditing by remember { mutableStateOf(false) }
@@ -308,27 +320,27 @@ fun ProfileInfoFields(
     Column(
         modifier = Modifier
             .padding(20.dp)
-            .fillMaxWidth()
-            .height(200.dp),
-        horizontalAlignment = Alignment.Start,
+            .fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        Text("Personal Information", fontFamily = fontTest)
+        Text("Personal Information", fontFamily = fontTest, color = Color(0xFFFE7316), fontSize = 20.sp)
         OutlinedTextField(
             value = userEmail,
+            textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
             onValueChange = { /* Do nothing */ },
-            label = { Text("Email Address", fontFamily = fontTest) },
+            label = { Text("Email Address", color = Color(0xFFFE7316)) },
             readOnly = true,
             modifier = Modifier.fillMaxWidth(),
-
             )
         OutlinedTextField(
             value = editableUserName,
+            textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
             onValueChange = { newName ->
                 editableUserName = newName
                 isEditing = true
             },
-            label = { Text(text = "UserName", fontFamily = fontTest) },
+            label = { Text(text = "UserName", color = Color(0xFFFE7316))},
             singleLine = true,
             trailingIcon = {
                 if (isEditing) {
@@ -339,5 +351,21 @@ fun ProfileInfoFields(
             },
             modifier = Modifier.fillMaxWidth()
         )
+        Spacer(modifier = Modifier.height(20.dp))
+        SetGoalButton(navController = navController)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
+        ){
+            Text("Log out", color = Color.White)
+            IconButton(onClick = {
+                navController.navigate("login")
+                FirebaseAuth.getInstance().signOut()
+            }) {
+                Icon(imageVector = Icons.Filled.ExitToApp, contentDescription = "Sign Out", tint = Color.White)
+            }
+        }
+
     }
 }

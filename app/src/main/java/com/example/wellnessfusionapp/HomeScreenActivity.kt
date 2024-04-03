@@ -2,58 +2,47 @@ package com.example.wellnessfusionapp
 
 import android.annotation.SuppressLint
 import android.util.Log
+import androidx.annotation.FontRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsBottomHeight
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
-import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.material3.contentColorFor
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -69,11 +58,11 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -88,14 +77,13 @@ import com.example.wellnessfusionapp.Models.Goal
 import com.example.wellnessfusionapp.Navigation.BottomNavBar
 import com.example.wellnessfusionapp.ViewModels.CategoryViewModel
 import com.example.wellnessfusionapp.ViewModels.MainViewModel
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.firestore
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
+
+/*
+ * Home Screen composable function
+ * This is the main screen of the app where the user can see his goals, create new ones, create new plans,
+ * see his progress and look his profile page clicking on the image in the top app bar
+ */
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -106,93 +94,92 @@ fun HomeScreen(
     exerciseId: String,
     userId: String
 ) {
-    val gradientBrush = Brush.verticalGradient(
-        colors = listOf(
-            Color.White,  // Lighter shade of blue
-            Color.White
-        )
-    )
-    val topBarGradient = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xffe85d04), // Dark navy blue
-            Color(0xffFF8D0F)  // Lighter shade of blue
-        )
 
-    )
+    // Text and font color and style
     val textColor = contentColorFor(Color(0xffFF8D0F))
-
     val fontTest = FontFamily(
         Font(R.font.zendots_regular)
     )
 
-
+    // extracting the userName and profile picture from firebase
     val userName by viewModel.userName.collectAsState()
     val userProfilePictureUrl by viewModel2.profilePictureUrl.collectAsState()
 
+    //
+    val ProfilePainter = if (userProfilePictureUrl != null) {
+        rememberAsyncImagePainter(model = userProfilePictureUrl)
+    } else {
+        painterResource(id = R.drawable.ic_launcher_foreground)
+    }
 
+
+    /*
+     * Fetching the user name from the database
+     */
     LaunchedEffect(userId) {
         viewModel.fetchUserName()
     }
 
+    /*
+     * Scaffold setup start
+     */
     Scaffold(
-
         topBar = {
             TopAppBar(
                 colors = topAppBarColors(
                     containerColor = Color(0xFFFE7316),
                 ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.Black)
-                    .height(65.dp),
                 title = {
                 },
-
                 navigationIcon = {
-
                     Row(
-                        modifier =
-                        Modifier.padding(6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceEvenly
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .fillMaxSize(),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .width(50.dp)
-                                .height(50.dp)
-                                .clip(CircleShape)
-                                .clickable { navController.navigate("UserProfile") }
-                        ) {
-
-                            val painter = if (userProfilePictureUrl != null) {
-                                rememberAsyncImagePainter(model = userProfilePictureUrl)
-                            } else {
-                                painterResource(id = R.drawable.ic_launcher_foreground)
-                            }
-
-                            Image(
-                                painter = painter,
-                                contentDescription = "Profile Picture",
-                                modifier = Modifier
-                                    .width(100.dp)
-                                    .height(100.dp)
-                                    .border(2.5.dp, Color.Black, CircleShape),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-                        // Text for user's name and welcome message integrated directly beside the profile icon
+                        /*
+                         * Custom Profile picture placed in the top app bar with a box around making the effect of a circle shape
+                         */
                         Column(
-                            modifier = Modifier.padding(start = 40.dp)
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .size(50.dp)
+                                    .clip(CircleShape)
+                                    .clickable { navController.navigate("UserProfile") }
+                            ) {
+                                Image(
+                                    painter = ProfilePainter,
+                                    contentDescription = "Profile Picture",
+                                    modifier = Modifier
+                                        .size(100.dp)
+                                        .border(3.dp, Color.White, CircleShape),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                        }
+                        /*
+                         * User name and welcome message placed in the top app bar
+                         */
+                        Column(
+                            modifier = Modifier
+                                .padding(10.dp)
+                                .fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
                         ) {
                             Text(
                                 text = "Hi, $userName",
                                 style = MaterialTheme.typography.bodyLarge,
-                                fontFamily = fontTest
+                                fontFamily = fontTest,
                             )
                             Text(
-                                text = "Welcome",
-                                style = MaterialTheme.typography.bodySmall,
+                                text = "Welcome Back",
+                                style = MaterialTheme.typography.bodyMedium,
                                 fontFamily = fontTest
 
                             )
@@ -203,8 +190,20 @@ fun HomeScreen(
                 },
             )
         },
+        /*
+         * Custom NavBar used across the app
+         */
         bottomBar = { BottomNavBar(navController) }
-    ) { paddingValues ->
+        /*
+     * End of scaffold setup for the record
+     */
+    )
+
+    { paddingValues ->
+
+        /*
+         * Setting an image as the background of the home screen
+         */
         Box(
             modifier = Modifier
                 .alpha(0.87f)
@@ -218,6 +217,10 @@ fun HomeScreen(
                     .scale(1.5f)
                     .blur(1.dp)
             )
+
+            /*
+             * Main Column for the home screen
+             */
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -225,6 +228,10 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.SpaceEvenly,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
+                /*
+                 * Buttons Section for the home screen
+                 */
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -246,171 +253,215 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    //button physical
-                    Column(
-                        modifier = Modifier,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .width(120.dp)
-                                .padding(top = 10.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .matchParentSize()
-                                    .clip(shape = CircleShape)
-                                    .graphicsLayer {
-                                        alpha = 0.7f
-                                    }
-                                    .background(Color(0xffFE7316))
-                            )
-                            Image(
-                                painter = painterResource(id = R.drawable.physical),
-                                contentDescription = "Physical",
-                                modifier = Modifier
-                                    .height(120.dp) // Adjust size as needed
-                                    .clickable(onClick = { navController.navigate("savedWorkoutPlans") }
-                                    ))
-
-                        }
-                        Box(
-                            modifier = Modifier
-                                .width(120.dp)
-                                .padding(top = 10.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .matchParentSize()
-                                    .clip(shape = CircleShape)
-                                    .graphicsLayer {
-                                        alpha = 0.7f
-                                    }
-                                    .background(Color.Black)
-                            )
-                            Column(
-                                modifier = Modifier
-                                    .align(Alignment.Center)
-                                    .clip(shape = CircleShape),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text("Physical", color = Color(0xffFE7316))
-                                Text(
-                                    textAlign = TextAlign.Center,
-                                    text = "Body Focused Exercises",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color.White,
-                                )
-                            }
-                        }
-
-                    }
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Column(
-                        modifier = Modifier,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .width(120.dp)
-                                .padding(top = 10.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .matchParentSize()
-                                    .clip(shape = CircleShape)
-                                    .graphicsLayer {
-                                        alpha = 0.9f
-                                    }
-                                    .background(Color(0xff1666ba))
-                            )
-                            Image(
-                                painter = painterResource(id = R.drawable.mental),
-                                contentDescription = "Mental",
-                                modifier = Modifier
-                                    .height(120.dp) // Adjust size as needed
-                                    .clickable(onClick = { navController.navigate("savedWorkoutPlans") }
-                                    ))
-                        }
-                        Box(
-                            modifier = Modifier
-                                .width(120.dp)
-                                .padding(top = 10.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .matchParentSize()
-                                    .clip(shape = CircleShape)
-                                    .graphicsLayer {
-                                        alpha = 0.7f
-                                    }
-                                    .background(Color.Black)
-                            )
-                            Column(
-                                modifier = Modifier
-                                    .align(Alignment.Center)
-                                    .clip(shape = CircleShape),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text("Mental", color = Color(0xffFE7316))
-                                Text(
-                                    textAlign = TextAlign.Center,
-                                    text = "Mind Focused Exercises",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color.White,
-                                )
-                            }
-                        }
-                    }
+                        ButtonPhysicalHome(navController = navController)
+                        Spacer(modifier = Modifier.height(20.dp))
+                        ButtonMental(navController = navController)
+                        Spacer(modifier = Modifier.height(20.dp))
                 }
-                Spacer(modifier = Modifier.height(20.dp))
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(10.dp)
-                ) {
-                    Row (
-                        modifier = Modifier
-                            .fillMaxWidth()
-                        ,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ){
-                        Text(
-                            "Active Goals",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = Color(0xffFE7316),
-                            fontFamily = fontTest
-                        )
-                        IconButton(
-                            onClick = { navController.navigate("goalScreen") }
-                        ) {
-                            Icon(
-                                Icons.Default.Add,
-                                contentDescription = "Add a goal",
-                                tint = Color(0xffFE7316),
-                            )
-                        }
-                    }
-                    HorizontalDivider()
-
-                    Spacer(modifier = Modifier.height(15.dp))
-                    GoalsDashboard(viewModel = MainViewModel(), navController = navController)
-                    Spacer(modifier = Modifier.height(15.dp))
-
-                }
-
+                /*
+                 * Goals Section for the home screen
+                 */
+                GoalsSection(navController = navController)
             }
         }
     }
-
 }
 
 
+/*
+ * Here are creating our goal Section where the user can see their active goals and create new goals also
+ * The user can also see goals progression from this page with navigation to the goal progress record
+ */
+@Composable
+fun GoalsSection(navController: NavController) {
+
+    val fontText = FontFamily(
+        Font(R.font.zendots_regular)
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(10.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "Active Goals",
+                style = MaterialTheme.typography.titleLarge,
+                color = Color(0xffFE7316),
+                fontFamily = fontText
+            )
+            Row(
+                modifier = Modifier,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "New Goal",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White,
+                )
+                IconButton(
+                    onClick = { navController.navigate("goalScreen") }
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Add a goal",
+                        tint = Color(0xffFE7316),
+                    )
+                }
+            }
+        }
+        HorizontalDivider()
+
+        Spacer(modifier = Modifier.height(15.dp))
+        GoalsDashboard(viewModel = MainViewModel(), navController = navController)
+        Spacer(modifier = Modifier.height(15.dp))
+
+    }
+}
+
+/*
+ * Custom Button For mental workout type with a custom image and text
+ */
+@Composable
+fun ButtonMental(navController: NavController) {
+    Column(
+        modifier = Modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .width(120.dp)
+                .padding(top = 10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clip(shape = CircleShape)
+                    .graphicsLayer {
+                        alpha = 0.9f
+                    }
+                    .background(Color(0xff1666ba))
+            )
+            Image(
+                painter = painterResource(id = R.drawable.mental),
+                contentDescription = "Mental",
+                modifier = Modifier
+                    .height(120.dp)
+                    // On click it goes to workout saved plans
+                    .clickable(onClick = { navController.navigate("savedWorkoutPlans") }
+                    ))
+        }
+        Box(
+            modifier = Modifier
+                .width(120.dp)
+                .padding(top = 10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clip(shape = CircleShape)
+                    .graphicsLayer {
+                        alpha = 0.7f
+                    }
+                    .background(Color.Black)
+            )
+            Column(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .clip(shape = CircleShape),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Mental", color = Color(0xffFE7316))
+                Text(
+                    textAlign = TextAlign.Center,
+                    text = "Mind Focused Exercises",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White,
+                )
+            }
+        }
+    }
+}
+/*
+ * Custom Button For physical workout type with a custom image and text
+ */
+@Composable
+fun ButtonPhysicalHome(navController: NavController) {
+    Column(
+        modifier = Modifier,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .width(120.dp)
+                .padding(top = 10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clip(shape = CircleShape)
+                    .graphicsLayer {
+                        alpha = 0.7f
+                    }
+                    .background(Color(0xffFE7316))
+            )
+            Image(
+                painter = painterResource(id = R.drawable.physical),
+                contentDescription = "Physical",
+                modifier = Modifier
+                    .height(120.dp)
+                    // On click it goes to workout saved plans
+                    .clickable(onClick = { navController.navigate("savedWorkoutPlans") }
+                    ))
+        }
+        Box(
+            modifier = Modifier
+                .width(120.dp)
+                .padding(top = 10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clip(shape = CircleShape)
+                    .graphicsLayer {
+                        alpha = 0.7f
+                    }
+                    .background(Color.Black)
+            )
+            Column(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .clip(shape = CircleShape),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Physical", color = Color(0xffFE7316))
+                Text(
+                    textAlign = TextAlign.Center,
+                    text = "Body Focused Exercises",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White,
+                )
+            }
+        }
+
+    }
+}
+
+/*
+ * Here is our custom goals dashboard, user can see his goals and interact with it
+ * We are using a lazy row to display the goals horizontally
+ * We are also using a custom goal item to display the goal with a progress bar
+ * Card setup for the goals dashboard
+ */
 @Composable
 fun GoalsDashboard(viewModel: MainViewModel, navController: NavController) {
     val goals by viewModel.goals.observeAsState(initial = emptyList())
-    var goalToUpdate by remember { mutableStateOf<Goal?>(null) }
-
 
     Card(
         modifier = Modifier
@@ -422,80 +473,37 @@ fun GoalsDashboard(viewModel: MainViewModel, navController: NavController) {
             Color.Black,
             Color.Black
         )
-
-
     ) {
         LazyRow {
             items(goals) { goal ->
                 GoalItem(
                     goal = goal,
                     navController = navController,
-                    onUpdateClick = { goalToUpdate = it }
                 )
             }
         }
     }
-
-
-    // Mostra o UpdateGoalDialog se goalToUpdate não for null
-    goalToUpdate?.let { goal ->
-        UpdateGoalDialog(goal = goal, onDismiss = { goalToUpdate = null }) { updatedGoal ->
-            viewModel.updateGoal(updatedGoal)
-            Log.d("GoalScreen", "Goal updated: $updatedGoal")
-            viewModel.saveProgressUpdate(updatedGoal.id, updatedGoal.currentValue.toFloat())
-            Log.d("GoalScreen", "Progress updated: ${updatedGoal.currentValue}")
-            goalToUpdate = null
-        }
-    }
 }
 
-@Composable
-fun UpdateGoalDialog(goal: Goal, onDismiss: () -> Unit, onUpdate: (Goal) -> Unit) {
-    var newValue by remember { mutableStateOf("") }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text = "Update Goal") },
-        text = {
-            Column {
-                Text("Current Progress: ${goal.currentValue}/${goal.desiredValue}")
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = newValue,
-                    onValueChange = { newValue = it },
-                    label = { Text("New Progress") },
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
-                )
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    if (newValue.isNotEmpty()) {
-                        val updatedGoal = goal.copy(currentValue = newValue.toInt())
-                        onUpdate(updatedGoal)
-                    }
-                }
-            ) {
-                Text("Update")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
-
+/*
+ * We are using our modal class goal to get the goals from the database
+ * So, each item goals parameters and dimensions are defined here,
+ * We are using a circular progress bar to show the progress of each goal,
+ * We have also defined a function to calculate the progress of each goal each time it is updated based on a user log
+ * We are also saying that when the user clicks on a goal, he will be redirected to a goal progress page
+ */
 @Composable
 fun GoalItem(
     goal: Goal,
     navController: NavController,
-    onUpdateClick: (Goal) -> Unit // Callback quando o botão de atualizar é clicado
 ) {
-    val progress = calculateProgress(goal.currentValue.toFloat(), goal.initialValue.toFloat(), goal.desiredValue.toFloat())
-
+    // Parameters to calculate the progress
+    val progress = calculateProgress(
+        goal.currentValue.toFloat(),
+        goal.initialValue.toFloat(),
+        goal.desiredValue.toFloat()
+    )
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -547,152 +555,17 @@ fun GoalItem(
     }
 }
 
+/*
+ * Function to calculate the progress of each goal every time is updated
+ */
 fun calculateProgress(current: Float, initial: Float, target: Float): Float {
-    // Ensure no division by zero and logical target > initial
+    // If the target is less than the initial value, the progress is 100%
     if (target <= initial) return 1f
+    // Then we calculate the progress
     val adjustedCurrent = current - initial
     val range = target - initial
+    // the progress is the adjusted current value divided by the range
     val progress = adjustedCurrent / range
-    return progress.coerceIn(0f, 1f) // Ensure the progress is between 0% and 100%
+    // returning the value of the progress, ensuring it is between 0 and 1 (0% and 100%)
+    return progress.coerceIn(0f, 1f)
 }
-
-
-@Composable
-fun GradientBackground() {
-    val gradient = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF0d1f2d), // Dark navy blue
-            Color(0xFF5c7a92)  // Lighter shade of blue
-        )
-    )
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(brush = gradient)
-    ) {
-        // Your content goes here
-    }
-}
-
-
-//@Composable
-//fun NotesSection(viewModel2: MainViewModel, exerciseId: String) {
-//    val allNotes = viewModel2.notes.observeAsState(initial = emptyMap())
-//    val notes = allNotes.value[exerciseId] ?: emptyList()
-//    var noteText by remember { mutableStateOf("") }
-//
-//
-//    fun formatTimestamp(timestamp: Long): String {
-//        val formatter = SimpleDateFormat("dd/MM/yyyy - HH:mm a", Locale.getDefault())
-//        formatter.timeZone = TimeZone.getDefault()
-//        return formatter.format(timestamp)
-//    }
-//
-//    Column {
-//        OutlinedTextField(value = noteText,
-//            onValueChange = { noteText = it },
-//            label = { Text("Note any progression here") },
-//            modifier = Modifier.fillMaxWidth(),
-//            trailingIcon = {
-//                IconButton(onClick = {
-//                    if (noteText.isNotBlank()) {
-//                        viewModel2.saveNotesForUser(exerciseId, noteText)
-//                        noteText = ""
-//                    }
-//                }) {
-//                    Icon(Icons.Default.Check, contentDescription = "Save Note")
-//                }
-//            })
-//        LazyColumn {
-//            items(notes) { note ->
-//                Row(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(vertical = 4.dp), // Espaço vertical entre itens
-//                    horizontalArrangement = Arrangement.SpaceBetween
-//                ) {
-//                    Box(modifier = Modifier.weight(1f)) {
-//                        Text(
-//                            text = note.noteText,
-//                            maxLines = 1,
-//                            overflow = TextOverflow.Ellipsis,
-//                            modifier = Modifier.padding(end = 8.dp)
-//                        )
-//                    }
-//                    Text(
-//                        text = formatTimestamp(note.timestamp),
-//                        modifier = Modifier.padding(start = 8.dp)
-//                    )
-//                }
-//            }
-//        }
-//    }
-//}
-
-
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(16.dp),
-//            ) {
-//                Text("Log your activity here", style = MaterialTheme.typography.bodyMedium)
-//                NotesSection(viewModel2, exerciseId)
-//
-//            }
-
-
-//@Composable
-//private fun WorkoutOptionWithDescription(
-//    title: String,
-//    description: String,
-//    icon: ImageVector,
-//    onClick: () -> Unit,
-//) {
-//    Column(
-//        horizontalAlignment = Alignment.CenterHorizontally,
-//        modifier = Modifier
-//            .clickable(onClick = onClick)
-//            .width(160.dp) // Set width to match the button and description box
-//    ) {
-//
-//        Button(
-//            onClick = onClick,
-//            shape = RoundedCornerShape(0.dp),
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .height(150.dp) // Adjusted for a standard button height
-//        ) {
-//            Icon(
-//                icon,
-//                contentDescription = title
-//            )
-//            Text(text = title, style = MaterialTheme.typography.bodySmall)
-//        }
-//        DescriptionBox(
-//            description = description,
-//            modifier = Modifier.fillMaxWidth() // Ensure the description box uses the full width
-//        )
-//    }
-//}
-//
-//@Composable
-//fun DescriptionBox(description: String, modifier: Modifier = Modifier) {
-//    Surface(
-//        modifier = modifier
-//            // Added padding for better visual separation
-//            .heightIn(min = 80.dp), // Ensure a minimum height for the description box
-//        shape = RoundedCornerShape(8.dp),
-//        color = MaterialTheme.colorScheme.surfaceVariant,
-//    ) {
-//        Text(
-//            text = description,
-//            modifier = Modifier.padding(8.dp),
-//            style = MaterialTheme.typography.bodySmall,
-//            textAlign = TextAlign.Center
-//        )
-//    }
-//}
-
-
-

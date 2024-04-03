@@ -8,15 +8,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.example.wellnessfusionapp.Navigation.MainNavHost
+import com.example.wellnessfusionapp.Services.authState
 import com.example.wellnessfusionapp.ViewModels.CategoryViewModel
 import com.example.wellnessfusionapp.ViewModels.ExerciseSelectionViewModel
 import com.example.wellnessfusionapp.ViewModels.GeneratedWorkoutViewModel
 import com.example.wellnessfusionapp.ViewModels.MainViewModel
 import com.example.wellnessfusionapp.ui.theme.WellnessFusionAppTheme
-import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.firestore
-import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 class MainActivity : ComponentActivity() {
@@ -30,8 +28,8 @@ class MainActivity : ComponentActivity() {
                 // Use authState to observe the authentication state.
 
                 // Access the current FirebaseUser? directly.
-                val authState = authState(FirebaseAuth.getInstance()).value
 
+                val authState = authState(FirebaseAuth.getInstance()).value
 
                 // Determine the start destination based on whether a user is logged in.
 
