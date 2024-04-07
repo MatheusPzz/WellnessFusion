@@ -1,213 +1,91 @@
 package com.example.wellnessfusionapp
 
-import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.Favorite
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import androidx.navigation.navigation
+import com.example.wellnessfusionapp.Navigation.MainNavHost
+import com.example.wellnessfusionapp.Services.authState
 import com.example.wellnessfusionapp.ViewModels.CategoryViewModel
+import com.example.wellnessfusionapp.ViewModels.ExerciseSelectionViewModel
+import com.example.wellnessfusionapp.ViewModels.GeneratedWorkoutViewModel
+import com.example.wellnessfusionapp.ViewModels.MainViewModel
 import com.example.wellnessfusionapp.ui.theme.WellnessFusionAppTheme
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+
+
+/*
+ Author: Matheus Perazzo
+ Date: 2024-04-07
+ Project: Wellness Fusion App
+
+ Mock User for easy testing:
+
+ - Email: example@gmail.com
+ - Password: 123456
+
+ Profile used to run the last tests in the app, you can login and see it for yourself when all the features are working. (mock date was used to see the results in the CHART)
+
+ This project was an academic project developed for the course of Mobile Development at Dorset College Ireland.
+ The project was developed by myself, Matheus Perazzo,
+ In this project you will find sections where AI was used for implementation, where i used information provided by ChatGPT,
+ Where i took the information and adapted to the projects needs.
+ The time development of this project was around 3 months, where i developed the app from scratch, learning and using the best practices of kotlin jetpack compose
+ The apps goal is to give the user a way to organise his fitness life and be aware of his progress and goals.
+ */
 
 class MainActivity : ComponentActivity() {
+    /*
+     Main Activity of the APP, principal entry point
+     here is where the app is created, and the activity is started
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Set the UI content of this activity, defining the layout
         setContent {
             WellnessFusionAppTheme {
-                Main()
-            }
-        }
-    }
-}
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@Composable
-fun Main() {
-    val navController = rememberNavController()
+                // Remember the navController that will handle navigation between composables in the app
+                val navController = rememberNavController()
 
-    MainNavHost(navController, viewModel())
-
-}
+                // Use authState to observe the authentication state.
+                // Getting the instance of the firebase everytime the app is executed
+                // Auth state is a firebase method to get the instance of it, listening the authentication state
 
 
-@Composable
-fun MainNavHost(navController: NavController, categoryViewModel: CategoryViewModel) {
-    NavHost(
-        navController = navController as NavHostController,
-        startDestination = "authentication"
-    ) {
+                // Creating a value to determine the first screen of the app
+                // if the user is authenticated the route will be home directly
+                // else he will go to login screen
 
-        //Authentication destinations
-        navigation(startDestination = "login", route = "authentication") {
-            composable("login") {
-                // Assume LoginScreen is correctly implemented
-                LoginScreen(navController = navController) {
-                    // This lambda is called on login success; navigate to the main content
-                    navController.navigate("home") {
-                        popUpTo("login") { inclusive = true }
-                    }
-                }
-            }
-            composable("signUp") { SignUpScreen(navController = navController) }
-        }
-
-
-        // Main content destinations
-
-        navigation(startDestination = "home", route = "mainContent") {
-            composable("home") { HomeScreen(navController, categoryViewModel) }
-        }
-        composable("home") { HomeScreen(navController, categoryViewModel) }
-        composable("profile") { ProfileScreen(navController) }
-        composable("favorites") { FavoritesScreen(navController) }
-        composable("settings") { SettingsScreen(navController) }
-        composable("physicalCategory") { PhysicalCategoryScreen(navController, categoryViewModel) }
-        composable("zenCategory") { ZenCategoryScreen(navController, categoryViewModel) }
-        composable(
-            route = "exerciseSelection/{selectedCategories}",
-            arguments = listOf(navArgument("selectedCategories") { type = NavType.StringType })
-        ) { backStackEntry ->
-            // Now extract the argument
-            val categoriesString = backStackEntry.arguments?.getString("selectedCategories") ?: ""
-            ExerciseSelectionScreen(
-                navController = navController,
-                viewModel = viewModel(),
-                selectedCategoryIds = categoriesString.split(",").filterNot { it.isBlank() }
-            )
-        }
-    }
-}
-
-
-data class NavigationItem(
-    val title: String,
-    val selectedIcon: ImageVector,
-    val unselectedIcon: ImageVector,
-    val route: String,
-)
-
-@Composable
-fun BottomNavBar(navController: NavController) {
-    val items = listOf(
-        NavigationItem("Home", Icons.Filled.Home, Icons.Outlined.Home, "home"),
-        NavigationItem("Profile", Icons.Filled.Person, Icons.Outlined.Person, "profile"),
-        NavigationItem(
-            "Favorites",
-            Icons.Filled.Favorite,
-            Icons.Outlined.Favorite,
-            "favorites"
-        ),
-        NavigationItem(
-            "Settings",
-            Icons.Filled.Settings,
-            Icons.Outlined.Settings,
-            "settings"
-        )
-    )
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-
-    NavigationBar {
-        items.forEach { item ->
-            val selected = currentRoute == item.route
-            NavigationBarItem(
-                icon = {
-                    Icon(
-                        if (selected) item.selectedIcon else item.unselectedIcon,
-                        contentDescription = item.title
-                    )
-                },
-                selected = selected,
-                onClick = {
-                    if (!selected) {
-                        navController.navigate(item.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
-                },
-                label = { Text(item.title) },
-            )
-        }
-    }
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun MainTopBar(title: String, navController: NavController, onMenuClick: () -> Unit) {
-    CenterAlignedTopAppBar(
-        title = { Text(text = "Wellness Fusion", style = MaterialTheme.typography.titleLarge)
-        },
-
-        navigationIcon = {
-            IconButton(onClick = onMenuClick) {
-                Icon(
-                    imageVector = Icons.Filled.Menu,
-                    contentDescription = "Menu Drawer"
+                // Nav Host composable
+                // We are passing all the view models and parameters/arguments necessary for our
+                // nav controller navigates smoothly and properly between screens
+                MainNavHost(
+                    navController,
+                    CategoryViewModel(),
+                    startDestination = "splash",
+                    ExerciseSelectionViewModel(),
+                    GeneratedWorkoutViewModel(),
+                    MainViewModel(),
+                    "",
+                    "",
+                    emptyList(),
+                    ""
                 )
-            }
-        },
 
-        actions = {
-            IconButton(onClick = {
-                navController.navigate("Login")
-            }) {
-                Icon(
-                    imageVector = Icons.Filled.ExitToApp,
-                    contentDescription = "Sign Out"
-                )
             }
         }
-    )
+    }
 }
-
-
 @Preview(showBackground = true)
 @Composable
 fun WellnessScreenPreview() {
     WellnessFusionAppTheme {
-        Main()
+
     }
 }
-
-//@Composable
-//fun authState(auth: FirebaseAuth): State<FirebaseUser?> {
-//    val currentUser = remember { mutableStateOf(auth.currentUser) }
-//
-//    DisposableEffect(auth) {
-//        val listener = FirebaseAuth.AuthStateListener { firebaseAuth ->
-//            currentUser.value = firebaseAuth.currentUser
-//        }
-//        auth.addAuthStateListener(listener)
-//        onDispose {
-//            auth.removeAuthStateListener(listener)
-//        }
-//    }
-//
-//    return currentUser
-//}
