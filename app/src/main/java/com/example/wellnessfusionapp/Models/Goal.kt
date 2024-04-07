@@ -14,13 +14,13 @@ data class Goal(
     val currentValue: Int = 0,
     val exerciseId: String? = null,
     val startDate: Timestamp = Timestamp.now(),
-    val endDate: Date? = null,
+    val endDate: Timestamp = Timestamp.now(),
     var status: String = "active",
     val workoutDays: Int? = null
 ){
     constructor() : this(
         id = UUID.randomUUID().toString(),
-        type = GoalType("", ""),
+        type = GoalType("", "", GoalCategory.PHYSICAL, 0),
         typeId = "",
         description = "",
         desiredValue = 0,
@@ -28,7 +28,7 @@ data class Goal(
         currentValue = 0,
         exerciseId = "",
         startDate = Timestamp.now(),
-        endDate = null,
+        endDate = Timestamp.now(),
         status = "active",
         workoutDays = 0
     )

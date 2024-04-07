@@ -6,5 +6,4 @@ data class User(
     val password: String,
     val name: String? = null,
     val profile_picture: String? = null,
-    // Add other fields as necessary
 )

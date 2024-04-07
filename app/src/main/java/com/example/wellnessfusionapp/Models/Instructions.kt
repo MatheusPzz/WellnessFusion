@@ -8,6 +8,7 @@ data class Instructions(
     val musclesPrimary: String = "",
     val musclesSecondary: String = "",
     val musclesWorkedImage : String = "",
+    val targetMental: String = "",
     val instructions: String = "",
     val videoUrl: String = "",
     val imageUrl: String = "",
@@ -15,13 +16,7 @@ data class Instructions(
     val reps: String = "",
     val sets: String = "",
     val exerciseName: String = "",
-    val exerciseId: String = ""
-)
-
-
-data class WeightRecommendation(
-    val minWeight: Int = 0,
-    val maxWeight: Int = 0,
-    val recommendedReps : Int = 0,
-    val recommendedSets : Int = 0
+    val exerciseId: String = "",
+    val workoutType: String = "",
+    val duration: String = ""
 )

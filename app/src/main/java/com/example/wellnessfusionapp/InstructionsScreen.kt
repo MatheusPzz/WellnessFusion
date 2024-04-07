@@ -1,6 +1,9 @@
 package com.example.wellnessfusionapp
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import coil.compose.rememberImagePainter
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,7 +26,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardElevation
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,6 +38,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults.topAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,8 +49,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -53,6 +62,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import com.example.wellnessfusionapp.Models.Instructions
+import com.example.wellnessfusionapp.Navigation.BottomNavBar
 import com.example.wellnessfusionapp.ViewModels.MainViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
@@ -61,57 +71,65 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 
+
+
+/*
+ Instructions screen, here the user can see detailed information about
+ each exercise, how to execute them and all.
+ */
 @OptIn(ExperimentalPagerApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun InstructionScreen(exerciseId: String, viewModel: MainViewModel, navController: NavController) {
-    val pagerState = rememberPagerState()
+
+    // Fetching the instructions for each exercise
     val instructions = viewModel.instructions.observeAsState()
+
 
     LaunchedEffect(exerciseId) {
         viewModel.fetchInstructionsForExercise(exerciseId)
     }
 
+    // Displaying the instructions for each exercise in a scaffold with a top app bar
     instructions.value?.let { instruction ->
         Scaffold(topBar = {
-            TopAppBar(title = { Text(text = instruction.exerciseName) }, navigationIcon = {
+            TopAppBar(
+                colors = topAppBarColors(
+                    containerColor = Color(0xFFFE7316),
+                ),
+                title = { Text(text = instruction.exerciseName) }, navigationIcon = {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                 }
             })
         }, bottomBar = {
-            Column(
-                modifier = Modifier
-                    .padding(15.dp)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.Top,
-                horizontalAlignment = Alignment.Start
-            ) {
-//                NotesSection(viewModel, exerciseId)
-            }
+            BottomNavBar(navController = navController)
         }
         ) { paddingValues ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .padding(paddingValues)
+
+            Box(
+                modifier = Modifier.fillMaxSize().background(Color.Black)
             ) {
-
-                item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        verticalArrangement = Arrangement.SpaceAround,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        AnimatedGif(imageUrl = instruction.imageUrl)
-                        Spacer(modifier = Modifier.size(10.dp))
-                        MuscleWorkedSection(instruction)
-                        Spacer(modifier = Modifier.size(10.dp))
-                        InstructionsSection(instruction)
-                        Spacer(modifier = Modifier.size(10.dp))
-                        ExtraContentSection(instruction)
-
-
+                // Displaying the instructions in a lazy column
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(paddingValues)
+                ) {
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize(),
+                            verticalArrangement = Arrangement.SpaceAround,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            // i have split the into 4 sections of composable for better edition and readability
+                            AnimatedGif(imageUrl = instruction.imageUrl)
+                            Spacer(modifier = Modifier.size(10.dp))
+                            MuscleWorkedSection(instruction)
+                            Spacer(modifier = Modifier.size(10.dp))
+                            InstructionsSection(instruction)
+                            ExtraContentSection(instruction)
+                        }
                     }
                 }
             }
@@ -119,8 +137,14 @@ fun InstructionScreen(exerciseId: String, viewModel: MainViewModel, navControlle
 
     }
 }
+
+/*
+ Here we are loading the animated gif for each exercise
+ */
 @Composable
 fun AnimatedGif (imageUrl: String) {
+
+    // Loading the image with coil
     val imageLoader = ImageLoader.Builder(LocalContext.current)
         .components {
             if (Build.VERSION.SDK_INT >= 28) {
@@ -149,6 +173,9 @@ fun AnimatedGif (imageUrl: String) {
 }
 
 
+/*
+ Muscle worked section, here we display the muscles worked by each exercise
+ */
 @Composable
 fun MuscleWorkedSection(instruction: Instructions) {
     Card(
@@ -156,6 +183,12 @@ fun MuscleWorkedSection(instruction: Instructions) {
             .fillMaxWidth()
             .padding(15.dp)
             .shadow(5.dp),
+        colors = CardColors(
+            Color.Gray.copy(alpha = 0.2f),
+            Color.White,
+            Color(0xff5c7a92),
+            Color(0xffFE7316),
+        )
     ) {
         Column(
             modifier = Modifier
@@ -164,28 +197,51 @@ fun MuscleWorkedSection(instruction: Instructions) {
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-            Text("Target Muscles:")
-            Spacer(modifier = Modifier.size(15.dp))
-            Text(text = "Primary Muscles: ${instruction.musclesPrimary}")
-            Text(text = "Secondary Muscles: ${instruction.musclesSecondary}")
-            Spacer(modifier = Modifier.size(10.dp))
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                AsyncImage(
-                    model = instruction.musclesWorkedImage,
-                    contentDescription = "Muscles Worked",
-                    modifier = Modifier.size(250.dp)
-                )
-            }
+            if(instruction.exerciseId == "12" || instruction.exerciseId == "13" || instruction.exerciseId == "14") {
+                Text("Mental Target: \n${instruction.targetMental}", fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.size(10.dp))
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    AsyncImage(
+                        model = instruction.musclesWorkedImage,
+                        contentDescription = "Muscles Worked",
+                        contentScale = ContentScale.FillWidth,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
 
+            } else {
+
+                // Calling the information fetched from the API to our UI
+                Text("Target Muscles:", fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.size(15.dp))
+                Text(text = "Primary Muscles: ${instruction.musclesPrimary}")
+                Text(text = "Secondary Muscles: ${instruction.musclesSecondary}")
+                Spacer(modifier = Modifier.size(10.dp))
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    AsyncImage(
+                        model = instruction.musclesWorkedImage,
+                        contentDescription = "Muscles Worked",
+                        modifier = Modifier.size(250.dp)
+                    )
+                }
+            }
 
         }
     }
 }
 
+/*
+ Instructions section is displaying the incstructions for each exercise
+ that were also fetched from the API, firestore in this case
+ */
 @Composable
 fun InstructionsSection(instruction: Instructions) {
     val steps = instruction.instructions.split(".")
@@ -194,6 +250,12 @@ fun InstructionsSection(instruction: Instructions) {
             .fillMaxWidth()
             .padding(15.dp)
             .shadow(5.dp),
+        colors = CardColors(
+            Color.Gray.copy(alpha = 0.2f),
+            Color.White,
+            Color(0xff5c7a92),
+            Color(0xffFE7316),
+        )
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
@@ -202,6 +264,7 @@ fun InstructionsSection(instruction: Instructions) {
         ) {
             Text("Instructions:", style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.size(10.dp))
+            // Formatting the lines and putting it into steps which are numbered
             steps.forEachIndexed { index, step ->
                 Spacer(modifier = Modifier.size(10.dp))
                 if (step.isNotBlank()) {
@@ -217,8 +280,17 @@ fun InstructionsSection(instruction: Instructions) {
     }
 }
 
+
+/*
+ Basic recommended information for the user mainly for beginners and
+ link to a page that talks about each of the exercises that are displayed
+ professional content
+ */
 @Composable
 fun ExtraContentSection(instruction: Instructions) {
+
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -228,14 +300,35 @@ fun ExtraContentSection(instruction: Instructions) {
             modifier = Modifier
                 .fillMaxWidth()
                 .shadow(5.dp),
+            colors = CardColors(
+                Color.Gray.copy(alpha = 0.2f),
+                Color.White,
+                Color(0xff5c7a92),
+                Color(0xffFE7316),
+            )
         ){
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(10.dp),
-
+            if(instruction.workoutType == "Mental") {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
                 ) {
-                Text("Sets: ${instruction.sets}")
-                Text("Reps: ${instruction.reps}")
-                Text("Weight: ${instruction.weight} Kg for beginners")
+                    // section that shows recommended sets, reps and weight for each exercise, this information is also fetched from firestore
+                    Text(text = "Recommended", color = Color.White)
+                    Text(text = "Sets: ${instruction.sets} daily", color = Color.White)
+                    Text(text = "Duration: ${instruction.duration} minutes (min)", color = Color.White)
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                ) {
+                    // section that shows recommended sets, reps and weight for each exercise, this information is also fetched from firestore
+                    Text(text = "Recommended", color = Color.White)
+                    Text(text = "Sets: ${instruction.sets}", color = Color.White)
+                    Text(text = "Reps: ${instruction.reps}", color = Color.White)
+                    Text(text = "Weight: ${instruction.weight} KG", color = Color.White
+                    )
+                }
             }
         }
         Spacer(modifier = Modifier.size(20.dp))
@@ -243,89 +336,36 @@ fun ExtraContentSection(instruction: Instructions) {
             modifier = Modifier
                 .fillMaxWidth()
                 .shadow(5.dp),
-        ){
-        Column(
-            modifier = Modifier
-                .padding(10.dp)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.Bottom,
-            horizontalAlignment = Alignment.CenterHorizontally
+            colors = CardColors(
+                Color.Gray.copy(alpha = 0.2f),
+                Color.White,
+                Color(0xff5c7a92),
+                Color(0xffFE7316),
+            )
         ) {
-            Text("Professional Content: ${instruction.videoUrl}")
-        }
+            Column(
+                modifier = Modifier
+                    .padding(10.dp)
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.Bottom,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text("Professional Content:")
+
+
+                Button(
+                    colors = ButtonDefaults.buttonColors(Color(0xffFE7316)),
+                    onClick = {
+                        // Use Uri.parse() to transform the String URL into a Uri
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(instruction.videoUrl))
+                        context.startActivity(intent)
+                        Log.d("URL Check", "URL to open: ${instruction.videoUrl}")
+                    },
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    Text("Link to professional content")
+                }
             }
+        }
     }
 }
-
-// function to write personalized notes for user in each exercise
-
-//@Composable
-//fun NotesSection(viewModel: MainViewModel, exerciseId: String) {
-//    val allNotes = viewModel.notes.observeAsState(initial = emptyMap())
-//    val notes = allNotes.value[exerciseId] ?: emptyList()
-//    var noteText by remember { mutableStateOf("") }
-//
-//
-//    fun formatTimestamp(timestamp: Long): String {
-//        val formatter = SimpleDateFormat("dd/MM/yyyy - HH:mm a", Locale.getDefault())
-//        formatter.timeZone = TimeZone.getDefault()
-//        return formatter.format(timestamp)
-//    }
-//
-//    Column {
-//        OutlinedTextField(value = noteText,
-//            onValueChange = { noteText = it },
-//            label = { Text("Note any progression here") },
-//            modifier = Modifier.fillMaxWidth(),
-//            trailingIcon = {
-//                IconButton(onClick = {
-//                    if (noteText.isNotBlank()) {
-//                        viewModel.saveNotesForUser(exerciseId, noteText)
-//                        noteText = ""
-//                    }
-//                }) {
-//                    Icon(Icons.Default.Check, contentDescription = "Save Note")
-//                }
-//            })
-//    }
-//}
-
-//        LazyColumn {
-//            items(notes) { note ->
-//                Row(
-//                    modifier = Modifier
-//                        .fillMaxSize()
-//                        .padding(vertical = 4.dp), // Adiciona um pequeno espaço vertical entre os itens
-//                    horizontalArrangement = Arrangement.SpaceBetween
-//                ) {
-//                    // Limita o espaço que o texto da nota pode ocupar
-//                    Box(modifier = Modifier.weight(1f)) {
-//                        Text(
-//                            text = note.noteText, maxLines = 1, // Limita o texto a uma única linha
-//                            overflow = TextOverflow.Ellipsis, // Adiciona "..." se o texto for muito longo
-//                            modifier = Modifier.padding(end = 8.dp) // Garante espaço entre o texto da nota e o timestamp
-//                        )
-//                    }
-//                    // Exibe o timestamp, garantindo que ele não será empurrado para fora
-//                    Text(
-//                        text = formatTimestamp(note.timestamp),
-//                        modifier = Modifier.padding(start = 8.dp) // Adiciona um pequeno espaço antes do timestamp
-//                    )
-//                }
-//            }
-//        }
-
-
-//HorizontalPager(
-//count = 3, // Total de páginas
-//state = pagerState, modifier = Modifier.height(250.dp)
-//) { page ->
-//    when (page) {
-//        0 -> MuscleWorkedSection(instruction)
-//
-//        1 -> InstructionsSection(instruction)
-//
-//        2 -> ExtraContentSection(instruction)
-//    }
-//}
-

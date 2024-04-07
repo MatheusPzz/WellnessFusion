@@ -12,6 +12,8 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.example.wellnessfusionapp.Models.Category
 import com.example.wellnessfusionapp.Models.Exercise
+import com.example.wellnessfusionapp.Models.WorkoutPlan
+import com.example.wellnessfusionapp.Models.WorkoutType
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -31,32 +33,35 @@ import javax.inject.Inject
 @HiltViewModel
 class ExerciseSelectionViewModel @Inject constructor() : ViewModel() {
 
-
-    private val _groupedExercisesState = MutableStateFlow<Map<String, List<Exercise>>>(mapOf())
-    val groupedExercisesState: StateFlow<Map<String, List<Exercise>>> = _groupedExercisesState.asStateFlow()
-
-
     init {
+        // Initializes the viewModel setting up a listener for changes in the category
         listenToCategorySelectionChanges()
     }
 
-    /* aqui estamos iniciando uma coleta de fluxo que escuta mudancas nas categorias selectionas, quando ha uma alteracao
-    * ela chama a variabel update exercises com os novos ids de categoria selectionados*/
+    // Returning the ID of the logged user using firebase AUTH
+    private fun getCurrentUserId(): String {
+        return FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    }
+
+    // State flow that holds a map of exercises grouped by their category Name.
+    private val _groupedExercisesState = MutableStateFlow<Map<String, List<Exercise>>>(mapOf())
+    val groupedExercisesState: StateFlow<Map<String, List<Exercise>>> =
+        _groupedExercisesState.asStateFlow()
 
 
+
+    // Collecting the flow that listens to the changes in the category selection
+    // It also calls the variable updateExercises with new selected category Ids
     private fun listenToCategorySelectionChanges() {
         viewModelScope.launch {
-            CategoryViewModel.SharedCategorySelection.selectedCategoryIds.collect{ selectedCategoryIds ->
+            CategoryViewModel.selectedCategoryIds.collect { selectedCategoryIds ->
                 updateExercises(selectedCategoryIds)
             }
         }
     }
 
-    /*
-    Busca os exercicios do Firestore baseados nos ids das categorias selecionadas e atualiza o estado _groupedExercisesState
-    com os exercicios agrupados por nome da categoria
-    * */
 
+    // Fetches the exercises from firestore based on their selected category Ids, grouped by categoryName
     private suspend fun updateExercises(categoryIds: List<String>) {
         val exercises = getExercisesFromFireStore(categoryIds)
         _groupedExercisesState.value = exercises.groupBy { it.categoryName }
@@ -68,6 +73,7 @@ class ExerciseSelectionViewModel @Inject constructor() : ViewModel() {
     * retorna uma lista de objetos exercicios
     * */
 
+    // Queries firebase firestore for exercises matching the selected category Ids and return the list of the matched category exercises
     private suspend fun getExercisesFromFireStore(categoryIds: List<String>): List<Exercise> {
         val db = FirebaseFirestore.getInstance()
         val exercises = mutableListOf<Exercise>()
@@ -92,20 +98,18 @@ class ExerciseSelectionViewModel @Inject constructor() : ViewModel() {
     }
 
 
-// Exercise selection logic
-
 
     private val _selectedExercises = MutableStateFlow<List<Exercise>>(emptyList())
-    val selectedExercises: StateFlow<List<Exercise>> = _selectedExercises.asStateFlow()
+//    val selectedExercises: StateFlow<List<Exercise>> = _selectedExercises.asStateFlow()
 
-    private val _selectedCategories = MutableStateFlow<List<Exercise>>(emptyList())
-    val selectedCategories: StateFlow<List<Exercise>> = _selectedCategories.asStateFlow()
+//    private val _selectedCategories = MutableStateFlow<List<Exercise>>(emptyList())
+//    val selectedCategories: StateFlow<List<Exercise>> = _selectedCategories.asStateFlow()
 
-    val currentSelection = _selectedExercises.value
+//    val currentSelection = _selectedExercises.value
 
 
-    // limpando o estado de selecao de exercicios quando o usuario sai da tela de selecao de exercicios e depois de salvar um plano de treino
 
+    // Clearing the state of exercise selection whenever the user navigates to another screen or saved a plan
     fun clearExerciseSelections() {
         viewModelScope.launch {
             _selectedExercises.value = emptyList()
@@ -113,8 +117,7 @@ class ExerciseSelectionViewModel @Inject constructor() : ViewModel() {
     }
 
 
-
-    /*Adiciona ou remove um exercicio da lista de exercicios selecionados com base na presenca do exercicio na lista*/
+    // Add or remove exercises from the selected exercises list based if the exercise is or not in the list
     fun toggleExerciseSelection(exercise: Exercise) {
 
         val currentSelection = _selectedExercises.value.toMutableList()
@@ -126,101 +129,65 @@ class ExerciseSelectionViewModel @Inject constructor() : ViewModel() {
         _selectedExercises.value = currentSelection
     }
 
-    /*somente verificando se um exercicio especifico esta selecionado*/
+
+    // Checking if a specific exercise is selected or not
     fun isExerciseSelected(exercise: Exercise): Boolean {
         return _selectedExercises.value.any { it.id == exercise.id }
     }
-
+    // Checking to see if the user selected any exercise, in this case is checking if our variable in not empty (the one that contains the exercises list)
     val hasSelectedExercises: Boolean
         get() = _selectedExercises.value.isNotEmpty()
 
 
-    /*retornando o id do usuario que esta logado na sessao usando firebase auth*/
-    private fun getCurrentUserId(): String {
-        return FirebaseAuth.getInstance().currentUser?.uid ?: ""
-    }
 
 
-    /*salvando o plano de treino criado no firestore sob o perfil do usuario atual e navega para a tela "Home" em sucesso*/
-    fun saveWorkoutPlan(navController: NavController, planName: String) {
+    // Function responsible for saving a workout plan to firestore, it creates a document with the necessary fields and passes data collected across our app to it
+    // Using os success and failure listener to set the prepared data to firestore.
+    fun saveWorkoutPlan(navController: NavController, planName: String, workoutType: WorkoutType) {
         val userId = getCurrentUserId()
         val db = Firebase.firestore
         val planDocument =
-            db.collection("Users").document(userId).collection("UserProfile").document(userId)
+            db.collection("Users").document(userId)
+                .collection("UserProfile").document(userId)
                 .collection("WorkoutPlans").document()
 
+        // Collecting the exercises
         val exerciseData = _selectedExercises.value.map { exercise ->
             exercise.id
         }
 
+        // Preparing the data
         val workoutPlan = hashMapOf(
             "planName" to planName,
             "exercises" to exerciseData,
             "creationDate" to Timestamp.now(),
-            "workoutPlanId" to planDocument.id
+            "workoutPlanId" to planDocument.id,
+            "category" to workoutType.name, // "mental" or "physical"
+            "isStarted" to false, // Initially, the plan is not started
+            "completedDate" to null, // Initially, there's no completion date
+            "timesFinished" to 0 // Add this line: Initially, the plan has not been completed
         )
 
+        // Setting the document with the fields and workout plan ID
         planDocument.set(workoutPlan)
             .addOnSuccessListener {
-                Log.d("Save Workout Plan", "Saving workout plan with exercise IDs: $exerciseData")
-                // Correctly clearing the back stack upon navigating to the createdPlans screen
-                navController.navigate("createdPlans/${planDocument.id}") {
-                    // Clearing back stack up to the root (assuming "home" is the startDestination)
-                    popUpTo(navController.graph.findStartDestination().id) {
-                        inclusive = true // Clears the entire back stack including the start destination
-                    }
-                }
+                Log.d("SaveWorkoutPlan", "Successfully saved workout plan: $planName")
+                navigateToCreatedPlans(navController, planDocument.id)
             }
             .addOnFailureListener { e ->
-                Log.e("ExerciseSelectionVM", "Error saving workout plan: ${e.message}", e)
+                Log.e("SaveWorkoutPlan", "Error saving workout plan: ${e.message}", e)
             }
+    }
+
+    // Navigating to the workout session screen with the planId as an argument
+    private fun navigateToCreatedPlans(navController: NavController, planId: String) {
+        navController.navigate("createdPlans/$planId") {
+            popUpTo(navController.graph.findStartDestination().id) {
+                inclusive = true
+            }
+        }
     }
 
 
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-//    val response: MutableState<DataState<List<Exercise>>> = mutableStateOf(DataState.Loading)
-//    init {
-//        fetchDataFromDatabase()
-//    }
-//
-//    private fun fetchDataFromDatabase() {
-//        val tempList = mutableListOf<Exercise>()
-//        val databaseReference = FirebaseDatabase.getInstance().getReference("Exercises")
-//        databaseReference.addValueEventListener(object : ValueEventListener {
-//            override fun onDataChange(snapshot: DataSnapshot) {
-//                tempList.clear()
-//                for (dataSnapshot in snapshot.children) {
-//                    val exerciseItem = dataSnapshot.getValue(Exercise::class.java)
-//                    exerciseItem?.let {
-//                        tempList.add(it)
-//                    }
-//                }
-//                response.value = DataState.Success(tempList)
-//            }
-//
-//            override fun onCancelled(error: DatabaseError) {
-//                response.value = DataState.Failure(error.message)
-//            }
-//        })
-//    }
-//    private fun getData() {
-//        viewModelScope.launch {
-//            state.value = getExercisesFromFireStore()
-//
-//
-//        }
-//    }

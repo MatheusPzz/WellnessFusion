@@ -9,11 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.outlined.DateRange
-import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -53,14 +48,15 @@ import com.example.wellnessfusionapp.CreatedPlan
 import com.example.wellnessfusionapp.GoalProgressRecordScreen
 import com.example.wellnessfusionapp.GoalScreen
 import com.example.wellnessfusionapp.LogDetails
-import com.example.wellnessfusionapp.Models.TrainingLog
+import com.example.wellnessfusionapp.MentalCategoryScreen
+import com.example.wellnessfusionapp.Models.NavigationItem
 import com.example.wellnessfusionapp.ProfileScreen
 import com.example.wellnessfusionapp.R
-import com.example.wellnessfusionapp.R.drawable.icon_home_filled
+import com.example.wellnessfusionapp.Services.authState
 import com.example.wellnessfusionapp.ViewModels.ExerciseSelectionViewModel
 import com.example.wellnessfusionapp.ViewModels.GeneratedWorkoutViewModel
 import com.example.wellnessfusionapp.ViewModels.MainViewModel
-import com.example.wellnessfusionapp.ZenCategoryScreen
+import com.example.wellnessfusionapp.ui.theme.SplashScreen
 import com.exyte.animatednavbar.AnimatedNavigationBar
 import com.exyte.animatednavbar.animation.balltrajectory.BallAnimInfo
 import com.exyte.animatednavbar.animation.balltrajectory.BallAnimation
@@ -71,37 +67,51 @@ import com.exyte.animatednavbar.animation.indendshape.ShapeCornerRadius
 import com.exyte.animatednavbar.animation.indendshape.shapeCornerRadius
 import com.exyte.animatednavbar.layout.animatedNavBarMeasurePolicy
 import com.exyte.animatednavbar.utils.ballTransform
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import com.google.firebase.auth.FirebaseAuth
 
-@OptIn(ExperimentalCoroutinesApi::class)
+/*
+ MainNavHost defined the main navigation system of my application, coordinating how the screen transitions are going to be handled
+ */
 @Composable
 fun MainNavHost(
-    navController: NavController,
-    categoryViewModel: CategoryViewModel,
-    startDestination: String,
-    exerciseSelectionViewModel: ExerciseSelectionViewModel,
-    generatedWorkoutViewModel: GeneratedWorkoutViewModel,
-    mainViewModel: MainViewModel,
-    exerciseId: String,
-    workoutPlanId: String,
-    goals: List<Goal>,
-    userId: String
+    navController: NavController,  // Usual controller
+    categoryViewModel: CategoryViewModel, // View model that interacts with the logic for category selection
+    startDestination: String, // defined the initial path of the app
+    exerciseSelectionViewModel: ExerciseSelectionViewModel,  // View Model that interacts with the logic for exercise selection
+    generatedWorkoutViewModel: GeneratedWorkoutViewModel, // View model that interacts with the generated workout plans that were created by the user
+    mainViewModel: MainViewModel, // This is the principal view model of the app, it has most of the logic behind the screens
+    exerciseId: String, // Passing the ID of each exercise between screens
+    workoutPlanId: String,  // Passing the Plan ID of each plan between screens
+    goals: List<Goal>, // Goals modal class
+    userId: String  // User ID string
 ) {
+    val authState = authState(FirebaseAuth.getInstance()).value
+    // Creating a nav host that manages the nav graph, where each composable is represented by a route destination
     NavHost(navController = navController as NavHostController, startDestination = startDestination)
     {
-        // Login Routes
+        // Splash
+        composable("splash") {
+            SplashScreen(navController)
+        }
+
+        // Authentication Routes //
+
+        // Login route represents the login screen composable, on success login navigates to home screen
         composable("login") {
             LoginScreen(navController = navController) {
                 navController.navigate("home") {
+                    // Clears the back stack
                     popUpTo(navController.graph.findStartDestination().id) {
                         saveState = true
                     }
                 }
             }
         }
-        composable("signUp") { SignUpScreen(navController = navController) }
+        composable("signUp") {
+            SignUpScreen(
+            navController = navController
+        ) }
 
-        // Main Routes
         composable("home") {
             HomeScreen(
                 navController,
@@ -111,33 +121,39 @@ fun MainNavHost(
                 userId = userId
             )
         }
-        composable("logs") { LogScreen(navController, mainViewModel, goals) }
+
+
+        // App features routes //
+        composable("logs") { LogScreen(
+            navController,
+            mainViewModel,
+            goals
+        ) }
         composable("savedWorkoutPlans") {
             SavedWorkoutsScreen(
                 viewModel = generatedWorkoutViewModel,
                 navController = navController
             )
         }
-//        composable("settings") { SettingsScreen(navController) }
-
-        // Functionality Routes
         composable("physicalCategory") {
             PhysicalCategoryScreen(
                 navController,
                 categoryViewModel,
             )
         }
-        composable("zenCategory") {
-            ZenCategoryScreen(
+        composable("mentalCategory") {
+            MentalCategoryScreen(
                 navController,
                 categoryViewModel,
             )
         }
+        // This route has a few segments for exercise selection, it basically makes sure the selected categories are passed as argument to next screen in which this case is exercise selection screen
         composable(
             route = "exerciseSelection/{selectedCategories}",
             arguments = listOf(navArgument("selectedCategories") { type = NavType.StringType })
         )
         { backStackEntry ->
+            // Extracting the categories strings selected by the user
             val selectedCategoriesString =
                 backStackEntry.arguments?.getString("selectedCategories") ?: ""
             val selectedCategoriesList =
@@ -148,6 +164,9 @@ fun MainNavHost(
                 viewModel = categoryViewModel
             )
         }
+
+        // This route visualizes the exercise instructions based on exercise ID
+        // We are passing a few arguments between the workout session screen (exerciseId) to instructions route so we can visualize the instructions of the exercise selected
         composable(
             "instructions/{exerciseId}",
             arguments = listOf(navArgument("exerciseId") { type = NavType.StringType })
@@ -159,11 +178,13 @@ fun MainNavHost(
                 navController = navController
             )
         }
+
+        // This route brings the newly created plan exercises to a list of workout session that displays the exercises of a plan
+        // upon creation of a plan we pass the plan ID just generated as a string in nav argument, so we can have the just created plan with its current exercises in the next route directly
         composable(
             route = "createdPlans/{workoutPlanId}",
             arguments = listOf(navArgument("workoutPlanId") { type = NavType.StringType })
         ) { backStackEntry ->
-            // Fetch the workoutPlanId from the backStackEntry's arguments
             val workoutPlanId =
                 backStackEntry.arguments?.getString("workoutPlanId") ?: return@composable
             CreatedPlan(
@@ -181,7 +202,6 @@ fun MainNavHost(
             route = "goalProgressRecord/{goalId}",
             arguments = listOf(navArgument("goalId") { type = NavType.StringType })
         ) { backStackEntry ->
-            // Aqui você recupera o goalId passado como argumento
             val goalId = backStackEntry.arguments?.getString("goalId") ?: return@composable
             GoalProgressRecordScreen(goalId = goalId, viewModel = mainViewModel, navController = navController, exerciseId = exerciseId)
         }
@@ -205,20 +225,17 @@ fun MainNavHost(
     }
 }
 
-// Bottom Navigation System
-data class NavigationItem(
-    val title: String,
-    val selectedIcon: Int,
-    val unselectedIcon: Int,
-    val route: String,
-)
+/*
+ This composable displays the bottom navigation bar of the app
 
+ */
 @Composable
 fun BottomNavBar(navController: NavController) {
     Box(
         modifier = Modifier
             .background(color = Color(0xFFFE7316))
     ) {
+        // Here we define and style the items that are shown in the navigation and its routes
         val items = listOf(
             NavigationItem(
                 title = "Workouts",
@@ -239,10 +256,12 @@ fun BottomNavBar(navController: NavController) {
                 route = "logs"
             )
         )
-        val navBackStackEntry by navController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry?.destination?.route
-        var selectedIndex = items.indexOfFirst { it.route == currentRoute }.coerceAtLeast(0)
+        val navBackStackEntry by navController.currentBackStackEntryAsState() // Observes the current back stack entry to determine the current route for highlighting the active item.
 
+        val currentRoute = navBackStackEntry?.destination?.route
+        var selectedIndex = items.indexOfFirst { it.route == currentRoute }.coerceAtLeast(0)  // Determines the index of the currently selected navigation item based on the current route.
+
+        // The custom animated navigation bar and its style setup
         AnimatedNavigationBar(
             selectedIndex = selectedIndex,
             barColor = Color.Black,
@@ -252,13 +271,12 @@ fun BottomNavBar(navController: NavController) {
                     IconButton(onClick = {
                         selectedIndex = index
                         navController.navigate(item.route) {
-                            // This ensures that the navigation pop up to the start destination
-                            // and saves the state at each navigation graph level
+                            // This ensures that the navigation pop up to the start destination, depending on what level or route it is
+                            // and also saves the state at each navigation graph level
                             popUpTo(navController.graph.startDestinationId)
                             launchSingleTop = true
                         }
                     }) {
-                        // Correctly use the icon for each NavigationItem
                         val iconRes = if (index == selectedIndex) item.selectedIcon else item.unselectedIcon
                         Icon(
                             modifier = Modifier
@@ -276,20 +294,11 @@ fun BottomNavBar(navController: NavController) {
     }
 }
 
-
-fun navigateToTopLevelDestination(navController: NavController, route: String) {
-    val currentRoute = navController.currentDestination?.route
-    if (route != currentRoute) {
-        navController.navigate(route) {
-            popUpTo(navController.graph.findStartDestination().id) {
-                saveState = true
-            }
-            launchSingleTop = true
-            restoreState = true
-        }
-    }
-}
-
+// https://github.com/exyte/AndroidAnimatedNavigationBar/tree/master
+// This animated navigation bar was taken out from the author from this github link account
+// Adapted and used in this project instead of the regular android navigation bottom bar
+// i then, put some style to it, icons and readjusted to work the way my app requires it to run
+// So here we have a bottom nav bar with an animated ball circle for index transition
 
 @Composable
 fun AnimatedNavigationBar(
@@ -351,6 +360,8 @@ fun AnimatedNavigationBar(
 
 val ballSize = 10.dp
 
+
+// Custom for the color of the ball
 @Composable
 private fun ColorBall(
     modifier: Modifier = Modifier,
@@ -367,4 +378,3 @@ private fun ColorBall(
     )
 }
 
-// Main Top Bar System

@@ -17,7 +17,7 @@ data class ExerciseDetail(
     val exerciseName: String,
     val sets: Int = 0,
     val reps: Int = 0,
-    val weight: Int = 0
+    val weight: Int = 0,
 )
 {
     constructor() : this("", "", 0, 0, 0)

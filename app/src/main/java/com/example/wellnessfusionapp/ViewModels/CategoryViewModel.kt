@@ -22,6 +22,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CategoryViewModel @Inject constructor() : ViewModel() {
+
+    // Holds the list of physical workout categories, represented by their own attributes
     private val _physicalCategory = MutableStateFlow<List<Category>>(
         listOf(
             Category("0", "Chest", false, R.drawable.chest_category, WorkoutType.PHYSICAL),
@@ -32,54 +34,71 @@ class CategoryViewModel @Inject constructor() : ViewModel() {
             Category("5", "Abs", false, R.drawable.abs_category, WorkoutType.PHYSICAL),
         )
     )
-    private val _zenCategory = MutableStateFlow<List<Category>>(
+    // Holds the list of mental workout categories, represented by their own attributes
+    private val _mentalCategory = MutableStateFlow<List<Category>>(
         listOf(
-            Category("6", "Meditation", false, R.drawable.meditation, WorkoutType.ZEN),
-            Category("7", "Breathing", false, R.drawable.breathing, WorkoutType.ZEN),
-            Category("8", "Mindfulness", false, R.drawable.mindfullness, WorkoutType.ZEN),
-            Category("9", "Yoga", false, R.drawable.yoga, WorkoutType.ZEN),
-            Category("10", "Stretching", false, R.drawable.stretching, WorkoutType.ZEN),
-            Category("11", "Gaming", false, R.drawable.gaming, WorkoutType.ZEN),
+            Category("6", "Meditation", false, R.drawable.category_meditation, WorkoutType.MENTAL),
+            Category("7", "Breathing", false, R.drawable.category_breathing, WorkoutType.MENTAL),
+            Category("8", "Yoga", false, R.drawable.category_yoga, WorkoutType.MENTAL),
         )
     )
 
-    // Expose as read-only StateFlow
+    // Variables that hold the view of each category to be observed in the UI
     val physicalCategory: StateFlow<List<Category>> = _physicalCategory.asStateFlow()
-    val zenCategory: StateFlow<List<Category>> = _zenCategory.asStateFlow()
+    val zenCategory: StateFlow<List<Category>> = _mentalCategory.asStateFlow()
 
 
-    // Function to update the selection of a category
+    // Function to update the selection of a category, it returns the selected one or null if none is selected
+    fun getSelectedWorkoutType(): WorkoutType? {
+        val isPhysicalSelected = _physicalCategory.value.any { it.isSelected }
+        val isZenSelected = _mentalCategory.value.any { it.isSelected }
+
+        return when {
+            isPhysicalSelected -> WorkoutType.PHYSICAL
+            isZenSelected -> WorkoutType.MENTAL
+            else -> null // No category selected
+        }
+    }
+
+    // Updates the selection state of a category based on the provided type, category ID and selection state
     fun updateCategorySelection(type: WorkoutType, categoryId: String, isSelected: Boolean) {
-        val targetFlow = if (type == WorkoutType.PHYSICAL) _physicalCategory else _zenCategory
+        val targetFlow = if (type == WorkoutType.PHYSICAL) _physicalCategory else _mentalCategory
         targetFlow.value = targetFlow.value.map {
             if (it.categoryId == categoryId) it.copy(isSelected = isSelected) else it
         }
+        // notifies the observer variables states about the changes
         notifyCategorySelectionChanged()
     }
 
+    // Clearing the selections if the user goes back to the previous screen
     fun clearCategorySelections() {
         _physicalCategory.value = _physicalCategory.value.map { it.copy(isSelected = false) }
-        _zenCategory.value = _zenCategory.value.map { it.copy(isSelected = false) }
+        _mentalCategory.value = _mentalCategory.value.map { it.copy(isSelected = false) }
         viewModelScope.launch {
             SharedCategorySelection.updateSelectedCategoryIds(emptyList())
         }
     }
 
+    // emmits an updated list of selected category IDs
     private fun notifyCategorySelectionChanged() {
         viewModelScope.launch {
-            val selectedIds = (_physicalCategory.value + _zenCategory.value)
+            val selectedIds = (_physicalCategory.value + _mentalCategory.value)
                 .filter { it.isSelected }
                 .map { it.categoryId }
             SharedCategorySelection.updateSelectedCategoryIds(selectedIds)
         }
     }
 
+    // Returns a list of the ids of the current selected categories
     fun getSelectedCategoryIds(): List<String> {
-        return (_physicalCategory.value + _zenCategory.value)
+        return (_physicalCategory.value + _mentalCategory.value)
             .filter { it.isSelected }
             .map { it.categoryId }
     }
 
+    // This piece of code was taken out from ChatGPT as a base form, then adapted to my application
+    // It was need for sharing the ids to different parts of the app, in this case it will be shared to the exercise selection view model
+    // It shares the selected category Ids and allowa updating and observe these Ids upon any changes
     companion object SharedCategorySelection {
         private val _selectedCategoryIds = MutableSharedFlow<List<String>>(replay = 1)
         val selectedCategoryIds: SharedFlow<List<String>> = _selectedCategoryIds
@@ -89,14 +108,17 @@ class CategoryViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-
+    // Hold the current users name as a state flow
     private val _userName = MutableStateFlow("") // Default value
     val userName: StateFlow<String> = _userName.asStateFlow()
 
 
+    // retrieves the current user Ids from firebaseAuth
     private fun getCurrentUserId(): String {
         return FirebaseAuth.getInstance().currentUser?.uid ?: ""
     }
+
+    // Here we are performing a few queries to fetch the current user name from firestore based in their user ID
     suspend fun fetchUserName() {
         val userId = getCurrentUserId()
         val db = FirebaseFirestore.getInstance()

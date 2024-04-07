@@ -122,6 +122,9 @@ fun PhysicalCategoryScreen(
                 },
             )
         },
+        bottomBar = {
+            BottomNavBar(navController = navController)
+        }
     )
 
     /*
@@ -271,7 +274,7 @@ fun PhysicalCategoryScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun ZenCategoryScreen(navController: NavController, viewModel: CategoryViewModel) {
+fun MentalCategoryScreen(navController: NavController, viewModel: CategoryViewModel) {
     val context = LocalContext.current
     // ... your code
     val categories = viewModel.zenCategory.collectAsState().value
@@ -300,6 +303,7 @@ fun ZenCategoryScreen(navController: NavController, viewModel: CategoryViewModel
             )
         },
     ) { padding ->
+        // Main content of the page
         Box(
             modifier = Modifier
                 .alpha(0.90F)
@@ -340,6 +344,8 @@ fun ZenCategoryScreen(navController: NavController, viewModel: CategoryViewModel
                     }
                     HorizontalDivider(color = Color(0xff1666ba))
                 }
+
+                // Vertical grid with the categories
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(1),
                     modifier = Modifier
@@ -347,12 +353,13 @@ fun ZenCategoryScreen(navController: NavController, viewModel: CategoryViewModel
                         .fillMaxWidth()
                         .height(500.dp)
                 ) {
+                    // It displays the all the categories as we are passing .size to the items in this case mental
                     items(categories.size) { index ->
                         CategoryItem(
                             category = categories[index],
                             onCategorySelected = { isSelected ->
                                 viewModel.updateCategorySelection(
-                                    type = WorkoutType.ZEN,
+                                    type = WorkoutType.MENTAL,
                                     categoryId = categories[index].categoryId,
                                     isSelected = isSelected
                                 )
@@ -371,23 +378,22 @@ fun ZenCategoryScreen(navController: NavController, viewModel: CategoryViewModel
                             .fillMaxWidth(0.5f)
                             .height(40.dp),
                         onClick = {
+                            // Store the selected categories
                             val selectedCategories = viewModel.getSelectedCategoryIds()
 
+                            // Conditional to check if user selected at least one category
                             if (selectedCategories.isNotEmpty()) {
+
+                                // if that so then navigate to the exercise selection screen with the selected categories passed as argument
                                 val selectedCategoriesString = selectedCategories.joinToString(",")
-                                Log.d(
-                                    "Navigation",
-                                    "Navigating to exerciseSelection with categories: $selectedCategoriesString"
-                                )
 
                                 navController.navigate("exerciseSelection/$selectedCategoriesString") {
-                                    popUpTo("home") {
-                                        saveState = false
+                                    popUpTo("home") {  // Pop the back stack till the home screen
+                                        saveState = false // Do not save the state
                                     }
-                                    launchSingleTop = true
+                                    launchSingleTop = true // Launch as the top screen
                                 }
-                            } else {
-
+                            } else { // Throws a toast telling the user needs to select at least one category
                                 Toast.makeText(
                                     context,
                                     "Please select at least one category",
@@ -417,10 +423,10 @@ fun ZenCategoryScreen(navController: NavController, viewModel: CategoryViewModel
 @Composable
 fun CategoryItem(category: Category, onCategorySelected: (Boolean) -> Unit) {
 
-    val zenCategories = listOf("Meditation", "Yoga", "Mindfulness", "Breathing", "Stretching", "Gaming")
-    val physicalCategories = listOf("Chest", "Shoulders", "Abs", "Legs", "Arms", "Back")
+    val zenCategories = listOf("Meditation", "Yoga", "Mindfulness", "Breathing", "Stretching", "Gaming")  // List of zen categories
+    val physicalCategories = listOf("Chest", "Shoulders", "Abs", "Legs", "Arms", "Back") // List of physical categories
 
-    val text = FontFamily(
+    val text = FontFamily(  // Font for the text in the screen
         Font(R.font.zendots_regular, FontWeight.Normal),
     )
     Card(
@@ -428,9 +434,9 @@ fun CategoryItem(category: Category, onCategorySelected: (Boolean) -> Unit) {
             .width(150.dp)
             .height(180.dp)
             .padding(10.dp)
-            .clickable { onCategorySelected(!category.isSelected) },
+            .clickable { onCategorySelected(!category.isSelected) }, // Selecting the background of the card and the border, then changing the state of the category to selected
         colors = CardDefaults.cardColors(
-            containerColor = if (category.isSelected) Color.Gray
+            containerColor = if (category.isSelected) Color.Gray // also if selected change the background color to gray
             else Color.Black
         ),
         elevation = CardDefaults.cardElevation(
@@ -444,6 +450,8 @@ fun CategoryItem(category: Category, onCategorySelected: (Boolean) -> Unit) {
                 .fillMaxWidth()
                 .fillMaxHeight(1f)
         ) {
+
+            // Image the contains the image for each category
             Image(
                 painter = painterResource(id = category.image),
                 contentDescription = category.name,
@@ -461,12 +469,11 @@ fun CategoryItem(category: Category, onCategorySelected: (Boolean) -> Unit) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .align(Alignment.Center) // Align the column in the center of the Box
+                    .align(Alignment.Center)
                     .padding(0.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Bottom
             ) {
-//                Spacer(modifier = Modifier.height(100.dp)) // Spacer used to push the text down if needed
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()

@@ -1,6 +1,13 @@
 package com.example.wellnessfusionapp.Models
 
+enum class GoalCategory {
+    PHYSICAL,
+    MENTAL
+}
+
 data class GoalType(
-    val id: String, // Unique identifier for the goal type
-    val name: String // Name of the goal type, e.g., "Exercise Weight Progress"
+    val id: String,
+    val name: String,
+    val category: GoalCategory,
+    val goalIcon: Int
 )
