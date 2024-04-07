@@ -75,6 +75,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
@@ -82,346 +84,21 @@ import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
 import coil.request.ImageRequest
 import com.example.wellnessfusionapp.Models.Category
+import com.example.wellnessfusionapp.Models.WorkoutType
 import com.example.wellnessfusionapp.R
 
-//@OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterial3Api::class)
-//@Composable
-//fun ExerciseSelection(
-//    exerciseSelectionViewModel: ExerciseSelectionViewModel,
-//    navController: NavController,
-//    viewModel: CategoryViewModel
-//) {
-//
-//    var planName by remember { mutableStateOf("") }
-//    var showDialog by remember { mutableStateOf(false) }
-//    val context = LocalContext.current
-//
-//    val groupedExercises by exerciseSelectionViewModel.groupedExercisesState.collectAsState()
-//
-//    Scaffold(
-//        topBar = {
-//            TopAppBar(
-//                title = { Text(text = "Exercise Selection") },
-//                navigationIcon = {
-//                    IconButton(onClick = {
-//                        viewModel.clearCategorySelections()
-//                        navController.navigateUp()
-//                    }) {
-//                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-//                    }
-//                }
-//            )
-//        },
-//        bottomBar = {
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(16.dp),
-//                verticalArrangement = Arrangement.Center,
-//                horizontalAlignment = Alignment.CenterHorizontally
-//            ) {
-//                Button(onClick = {
-//                    showDialog = true
-//                }) {
-//                    Text(text = "Create Plan")
-//                }
-//
-//                if (showDialog) {
-//                    var localPlanName by remember { mutableStateOf("") }
-//
-//                    AlertDialog(
-//                        onDismissRequest = { showDialog = false },
-//                        title = { Text(text = "Enter Workout Plan Name") },
-//                        text = {
-//                            TextField(
-//                                value = localPlanName,
-//                                onValueChange = { localPlanName = it },
-//                                label = { Text("Workout Plan Name") }
-//                            )
-//                        },
-//                        confirmButton = {
-//                            Button(
-//                                onClick = {
-//                                    if (localPlanName.isNotEmpty()) {
-//                                        planName = localPlanName
-//                                        exerciseSelectionViewModel.saveWorkoutPlan(
-//                                            navController,
-//                                            planName
-//                                        )
-//                                        Toast.makeText(
-//                                            context,
-//                                            "Workout Plan Created",
-//                                            Toast.LENGTH_SHORT
-//                                        ).show()
-//                                        showDialog = false
-//                                        viewModel.clearCategorySelections()
-//                                        exerciseSelectionViewModel.clearExerciseSelections()
-//                                    } else {
-//                                        Toast.makeText(
-//                                            context,
-//                                            "Please enter a plan name",
-//                                            Toast.LENGTH_SHORT
-//                                        ).show()
-//                                    }
-//                                }
-//                            ) {
-//                                Text("Save")
-//                            }
-//                        },
-//                        dismissButton = {
-//                            Button(onClick = { showDialog = false }) {
-//                                Text("Cancel")
-//                            }
-//                        }
-//                    )
-//                }
-//            }
-//        }) { paddingValues ->
-//        Column(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(paddingValues),
-//            verticalArrangement = Arrangement.SpaceEvenly,
-//            horizontalAlignment = Alignment.CenterHorizontally
-//        ) {
-//            CategoriesWithExercises(
-//                groupedExercises = groupedExercises,
-//                viewModel = exerciseSelectionViewModel
-//            )
-//        }
-//    }
-//}
-//
-//
-//
-//@Composable
-//fun ExerciseDetail(exercise: Exercise, viewModel: ExerciseSelectionViewModel) {
-//    val isSelected = remember { mutableStateOf(viewModel.isExerciseSelected(exercise)) }
-//
-//    Column(
-//        modifier = Modifier
-//            .padding(0.dp)
-//            .fillMaxWidth()
-//            .height(300.dp),
-//        horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.SpaceEvenly
-//    ) {
-//
-//        AsyncImage(
-//            model = exercise.imageUrl,
-//            contentDescription = "Exercise Image",
-//            contentScale = ContentScale.Crop,
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .height(210.dp)
-//        )
-//
-//        Column(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(10.dp),
-//            verticalArrangement = Arrangement.Center,
-//            horizontalAlignment = Alignment.Start
-//        ) {
-//            Text(text = exercise.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = Color.White)
-//            Spacer(modifier = Modifier.padding(5.dp))
-//            Text(
-//                text = exercise.description ?: "No description",
-//                style = MaterialTheme.typography.bodyMedium,
-//                fontWeight = FontWeight.Bold, color = Color.White
-//            )
-//        }
-//    }
-//    Column(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .height(30.dp)
-//            .padding(10.dp),
-//        verticalArrangement = Arrangement.Center,
-//        horizontalAlignment = Alignment.End
-//    ) {
-//        Checkbox(
-//            modifier = Modifier.height(50.dp),
-//            colors = CheckboxDefaults.colors(
-//                checkedColor = Color.Blue,
-//                uncheckedColor = Color.White
-//            ),
-//            checked = isSelected.value,
-//            onCheckedChange = {
-//                viewModel.toggleExerciseSelection(exercise)
-//                isSelected.value = viewModel.isExerciseSelected(exercise)
-//            },
-//
-//        )
-//    }
-//
-//}
-//
-//
-//@Composable
-//fun ExpandableCard(
-//    categoryName: String,
-//    exercises: List<Exercise>,
-//    viewModel: ExerciseSelectionViewModel
-//) {
-//    var isExpanded by remember { mutableStateOf(false) }
-//
-//    Card(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .padding(5.dp)
-//            .shadow(5.dp)
-//            .alpha(0.9f),
-//        colors = CardColors(
-//            Color.Black,
-//            Color.Black,
-//            Color.Black,
-//            Color.Black
-//        )
-//    ) {
-//        Box(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(0.dp),
-//        ) {
-//            Box() {
-//                Image(
-//                    painter = painterResource(id = R.drawable.gaming),
-//                    contentDescription = null,
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .height(135.dp),
-//                    contentScale = ContentScale.Crop
-//                )
-//                Column(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .align(Alignment.BottomStart)
-//                ) {
-//                    Column(
-//                        modifier = Modifier
-//                            .padding(16.dp)
-//                            .fillMaxWidth()
-//                    ) {
-//                        Text(
-//                            text = categoryName,
-//                            style = MaterialTheme.typography.titleLarge,
-//                            color = Color.White,
-//                            fontWeight = FontWeight(700),
-//                            modifier = Modifier.padding(bottom = 8.dp) // Espaçamento para legibilidade
-//                        )
-//                        HorizontalDivider()
-//                    }
-//                    Spacer(modifier = Modifier.padding(16.dp))
-//                    AnimatedVisibility(visible = isExpanded) {
-//                        Column(
-//                            modifier = Modifier
-//                                .padding(top = 8.dp)
-//                                .fillMaxWidth()
-//                        ) {
-//                            exercises.forEach { exercise ->
-//                                Spacer(modifier = Modifier.padding(bottom = 16.dp))
-//                                ExerciseDetail(exercise = exercise, viewModel = viewModel)
-//                            }
-//                        }
-//                    }
-//                    // Ícone para expandir/recolher
-//                    Icon(
-//                        imageVector = if (isExpanded) Icons.Filled.ArrowDropDown else Icons.Filled.ArrowDropDown,
-//                        contentDescription = if (isExpanded) "Collapse" else "Expand",
-//                        modifier = Modifier
-//                            .size(30.dp)
-//                            .align(Alignment.End) // Alinha o ícone ao fim da coluna
-//                            .clickable { isExpanded = !isExpanded },
-//                    )
-//                }
-//            }
-//        }
-//    }
-//}
-//
-//// This is a list of categories with exercises inside
-//
-//@Composable
-//fun ExercisesList(exercises: List<Exercise>) {
-//    val groupedExercises = exercises.groupBy { it.categoryName }
-//
-//    LazyColumn {
-//        groupedExercises.forEach { (categoryName, exercisesForCategory) ->
-//            items(exercisesForCategory) { exercise ->
-//                ExerciseCard(exercise = exercise)
-//            }
-//        }
-//    }
-//}
-//
-//
-//// This padding for outside of the card
-//@Composable
-//fun CategoriesWithExercises(
-//    groupedExercises: Map<String, List<Exercise>>,
-//    viewModel: ExerciseSelectionViewModel
-//) {
-//    LazyColumn(modifier = Modifier.padding(horizontal = 6.dp)) {
-//        groupedExercises.forEach { (categoryName, exercises) ->
-//            item {
-//                ExpandableCard(
-//                    categoryName = categoryName,
-//                    exercises = exercises,
-//                    viewModel = viewModel
-//                )
-//            }
-//        }
-//    }
-//}
-//
-//@Composable
-//fun ExerciseCard(exercise: Exercise) {
-//    Card(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .padding(2.dp),
-//    ) {
-//        Column(modifier = Modifier.padding(8.dp)) {
-//            Text(text = exercise.categoryName, style = MaterialTheme.typography.bodyMedium)
-//            Divider(modifier = Modifier.padding(vertical = 5.dp))
-//            Text(text = exercise.name, style = MaterialTheme.typography.titleMedium)
-//            Text(
-//                text = exercise.description ?: "No description",
-//                style = MaterialTheme.typography.bodyMedium
-//            )
-//            Text(
-//                text = "Reps: ${exercise.reps}",
-//                style = MaterialTheme.typography.bodyMedium
-//            )
-//            Text(
-//                text = "Sets: ${exercise.sets}",
-//                style = MaterialTheme.typography.bodyMedium
-//            )
-//        }
-//    }
-//}
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@Preview(showBackground = true)
-@Composable
-fun ExerciseSelectionPreview() {
-    val navController = rememberNavController()
-    val viewModel = remember { CategoryViewModel() }
-
-    Scaffold(
-        topBar = { },
-        bottomBar = { },
-        content = {
-            ExerciseSelection(
-                exerciseSelectionViewModel = ExerciseSelectionViewModel(),
-                navController = navController,
-                viewModel = viewModel
-            )
-        }
-    )
-}
-
-
+/*
+ In this composable function,
+    - A top app bar is displayed with the title "Exercise Selection".
+    - A bottom bar is displayed with a button to create a workout plan.
+    - The categories with their exercises are displayed in a LazyColumn.
+    - The user is able to expand and colapse to see the exercises in each category.
+    - USer can select exercises by clicking on the checkbox.
+    - The user can create a workout plan by clicking on the "Create Plan" button.
+    - A dialog is displayed to enter the workout plan name.
+    - User saves his workout and goes to session workout screen to execute the workout.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExerciseSelection(
@@ -429,20 +106,23 @@ fun ExerciseSelection(
     navController: NavController,
     viewModel: CategoryViewModel
 ) {
+    // local context for toast messages
     val context = LocalContext.current
+
+    // variable to store the plan name
     val planName by remember { mutableStateOf("") }
-    var showDialog by remember { mutableStateOf(false) }
 
-    var backgroundGradient = listOf(
+    // gradient colors for the background of the page
+    val backgroundGradient = listOf(
         Color(0xffFF8D0F),
-        Color(0xFF007BFF),
+        Color.Black,
     )
-
     // Collects the grouped exercises state for display
     val groupedExercises by exerciseSelectionViewModel.groupedExercisesState.collectAsState()
 
     Scaffold(
-        topBar = { ExerciseSelectionTopBar(navController, viewModel) },
+        topBar = {
+            ExerciseSelectionTopBar(navController, viewModel) },
         bottomBar = {
             BottomBarForCreatingPlan(
                 planName,
@@ -457,7 +137,6 @@ fun ExerciseSelection(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    alpha = 0.8f,
                     brush = Brush.verticalGradient(
                         backgroundGradient,
                         startY = 750f,
@@ -480,12 +159,16 @@ fun ExerciseSelection(
     }
 }
 
+
+/*
+ Top app bar for the Exercise Selection screen
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExerciseSelectionTopBar(navController: NavController, viewModel: CategoryViewModel) {
     TopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = Color(0xFF36454F),
+            containerColor = Color.Black,
         ),
         title = { Text("Exercise Selection", color = Color.White) },
         navigationIcon = {
@@ -499,6 +182,12 @@ fun ExerciseSelectionTopBar(navController: NavController, viewModel: CategoryVie
     )
 }
 
+
+/*
+ This composable triggers the creation of a workout plan.
+ It includes opening a dialog for creation and saving of this plan, with a proper name
+ chosen by the user
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomBarForCreatingPlan(
@@ -508,23 +197,28 @@ fun BottomBarForCreatingPlan(
     viewModel: CategoryViewModel,
     navController: NavController
 ) {
+    // Local state for dialog and variable to store the plan name
     var localPlanName by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(false) }
+    var textFont = FontFamily(
+        Font(R.font.zendots_regular)
+    )
+
 
     if (showDialog) {
         BasicAlertDialog(
             onDismissRequest = { },
-            modifier = Modifier.fillMaxWidth()
-                .background(Color.White, RoundedCornerShape(10.dp)), // Apply necessary modifiers to control the dialog size
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White, RoundedCornerShape(10.dp)),
             properties = DialogProperties()
         ) {
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally, // Center content horizontally
-                modifier = Modifier.padding(all = 16.dp) // Apply padding around the dialog content
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(all = 16.dp)
             ) {
-                // Icon can be added here if needed
-                Text("Workout Plan Name", modifier = Modifier.align(Alignment.CenterHorizontally))
-                Spacer(modifier = Modifier.height(16.dp)) // Spacing between title and text field
+                Text("Workout Plan Name",fontFamily = textFont, modifier = Modifier.align(Alignment.CenterHorizontally))
+                Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = localPlanName,
                     onValueChange = { localPlanName = it },
@@ -532,29 +226,56 @@ fun BottomBarForCreatingPlan(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(16.dp)) // Spacing between text field and buttons
+                Spacer(modifier = Modifier.height(16.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Button(
+                        // on click dismisses the dialog
                         onClick = { showDialog = false },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF36454F)),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFF8D0F)),
                         modifier = Modifier.padding(end = 8.dp)
                     ) { Text("Cancel") }
                     Button(
                         onClick = {
+                            // checks if the plan name is not empty
                             if (localPlanName.isNotEmpty()) {
-                                exerciseSelectionViewModel.saveWorkoutPlan(navController, localPlanName)
-                                Toast.makeText(context, "Workout Plan Created", Toast.LENGTH_SHORT).show()
-                                viewModel.clearCategorySelections()
-                                exerciseSelectionViewModel.clearExerciseSelections()
-                                showDialog = false
+
+                                // gets the selected workout type
+                                val workoutType = viewModel.getSelectedWorkoutType()
+
+                                // if it is not null, saves the workout plan
+                                if (workoutType != null) {
+                                    exerciseSelectionViewModel.saveWorkoutPlan(
+                                        navController,
+                                        localPlanName,
+                                        workoutType
+                                    )
+                                    Toast.makeText(
+                                        context,
+                                        "Workout Plan Created",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    viewModel.clearCategorySelections()
+                                    exerciseSelectionViewModel.clearExerciseSelections()
+                                    showDialog = false
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Please select a category",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
                             } else {
-                                Toast.makeText(context, "Please enter a plan name", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    context,
+                                    "Please enter a plan name",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF36454F))
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFF8D0F))
                     ) { Text("Save") }
                 }
             }
@@ -568,14 +289,18 @@ fun BottomBarForCreatingPlan(
         horizontalAlignment = Alignment.End
     ) {
         Button(
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xffFF8D0F)),
             onClick = {
                 if (exerciseSelectionViewModel.hasSelectedExercises) {
                     showDialog = true
                 } else {
-                    Toast.makeText(context, "Please select at least one exercise", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        "Please select at least one exercise",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF36454F)),
             shape = ShapeDefaults.Medium,
         ) {
             Text("Create Plan")
@@ -583,11 +308,17 @@ fun BottomBarForCreatingPlan(
     }
 }
 
+
+/*
+ This composable function displays the categories with their exercises together.
+ */
 @Composable
 fun CategoriesWithExercises(
     groupedExercises: Map<String, List<Exercise>>,
     viewModel: ExerciseSelectionViewModel
 ) {
+
+    // lazy column that displays the categories with their exercises
     LazyColumn {
         groupedExercises.forEach { (categoryName, exercises) ->
             item {
@@ -597,13 +328,23 @@ fun CategoriesWithExercises(
     }
 }
 
+
+/*
+ This composable is the setup for the category card, once expanded exercises are shown.
+ */
 @Composable
 fun ExpandableCard(
     categoryName: String,
     exercises: List<Exercise>,
     viewModel: ExerciseSelectionViewModel
 ) {
+
+    // local state for the card expansion
     var isExpanded by remember { mutableStateOf(false) }
+    val textColor = Color(0xffFF8D0F)
+    val textFont = FontFamily(
+        Font(R.font.zendots_regular)
+    )
 
     Card(
         modifier = Modifier
@@ -646,7 +387,8 @@ fun ExpandableCard(
                         Text(
                             categoryName,
                             style = MaterialTheme.typography.headlineLarge,
-                            color = Color.White,
+                            color = textColor,
+                            fontFamily = textFont,
                             modifier = Modifier.padding(8.dp),
                         )
                         Icon(
@@ -656,16 +398,18 @@ fun ExpandableCard(
                                 .size(60.dp)
                                 .padding(8.dp)
                                 .clickable { isExpanded = !isExpanded },
-                            tint = Color.White
+                            tint = textColor
                         )
                     }
                 }
+                // Animated visibility for the exercises, exercise detail list is shown once it is expanded
                 AnimatedVisibility(visible = isExpanded) {
                     Column(
                         modifier = Modifier
                             .padding(2.dp)
                             .fillMaxSize()
                     ) {
+                        // list of exercises
                         exercises.forEach { exercise ->
                             ExerciseDetail(exercise, viewModel)
                         }
@@ -676,10 +420,19 @@ fun ExpandableCard(
     }
 }
 
+
+/*
+ This composable function displays the details of each exercise
+ as name, picture and description.
+ */
 @Composable
 fun ExerciseDetail(exercise: Exercise, viewModel: ExerciseSelectionViewModel) {
-    val isSelected = remember { mutableStateOf(viewModel.isExerciseSelected(exercise)) }
 
+    // local state for the checkbox selection
+    val isSelected = remember { mutableStateOf(viewModel.isExerciseSelected(exercise)) }
+    val textFont = FontFamily(
+        Font(R.font.zendots_regular)
+    )
 
 
     Column(
@@ -688,7 +441,7 @@ fun ExerciseDetail(exercise: Exercise, viewModel: ExerciseSelectionViewModel) {
             .height(300.dp),
         horizontalAlignment = Alignment.Start, verticalArrangement = Arrangement.SpaceEvenly
     ) {
-
+        // loading the exercise image
         AsyncImage(
             model = exercise.imageUrl,
             contentDescription = "Exercise Image",
@@ -698,6 +451,8 @@ fun ExerciseDetail(exercise: Exercise, viewModel: ExerciseSelectionViewModel) {
                 .height(150.dp)
         )
 
+
+        // displaying exercise name and description with a checkbox for selection
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -708,14 +463,14 @@ fun ExerciseDetail(exercise: Exercise, viewModel: ExerciseSelectionViewModel) {
             Text(
                 text = exercise.name,
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = Color.White,
+                fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.padding(5.dp))
             Text(
                 text = exercise.description ?: "No description",
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold, color = Color.White
+                color = Color.White
             )
         }
     }
@@ -726,6 +481,9 @@ fun ExerciseDetail(exercise: Exercise, viewModel: ExerciseSelectionViewModel) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.End
     ) {
+
+        // Checkbox for exercise selection, it triggers a view model function (boolean value), for each exercise selected state change
+        // Then passes the value of the selected ones to another viewModel function that holds the values of the selected exercises, later on passed to the workout plan
         Checkbox(
             modifier = Modifier.height(50.dp),
             colors = CheckboxDefaults.colors(
@@ -747,3 +505,23 @@ fun ExerciseDetail(exercise: Exercise, viewModel: ExerciseSelectionViewModel) {
     )
 }
 
+
+//@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+//@Preview(showBackground = true)
+//@Composable
+//fun ExerciseSelectionPreview() {
+//    val navController = rememberNavController()
+//    val viewModel = remember { CategoryViewModel() }
+//
+//    Scaffold(
+//        topBar = { },
+//        bottomBar = { },
+//        content = {
+//            ExerciseSelection(
+//                exerciseSelectionViewModel = ExerciseSelectionViewModel(),
+//                navController = navController,
+//                viewModel = viewModel
+//            )
+//        }
+//    )
+//}

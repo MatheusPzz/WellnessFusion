@@ -52,6 +52,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -80,24 +81,32 @@ import com.exyte.animatednavbar.animation.indendshape.shapeCornerRadius
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
-// Profile Screen content and functions
+/*
+ This is the composable responsible for our profile screen
+ where the user can see its email
+ change its name,
+ set a new goal
+ and update its profile picture
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     navController: NavController,
     viewModel: MainViewModel
 ) {
-    val context = LocalContext.current
-    val userName by viewModel.userName.collectAsState()
-    var userEmail by remember { mutableStateOf("") }
-    val user = FirebaseAuth.getInstance().currentUser
+    val context = LocalContext.current  // Local context used for toasting
+    val userName by viewModel.userName.collectAsState()  // Collecting the fetched user name from firestore
+    var userEmail by remember { mutableStateOf("") } // Remember email to survive screen updates or recomposition
+    val user = FirebaseAuth.getInstance().currentUser // Fetching current user from firebase AUTH method
+    userEmail = user?.email ?: "" // updating the email with firebase auth email
 
-    userEmail = user?.email ?: ""
-
+    // fetching the new user name back after user updates the user name
     LaunchedEffect(userName) {
         viewModel.fetchUserName()
     }
-
+    //Below code snippet is adapted from guidance provided by ChatGPT.
+    //It has been modified to fit the specific requirements of this application.
+    //Original ChatGPT suggestions were used as a foundation for further customization and optimization.
     val changePictureLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri: Uri? ->
@@ -120,6 +129,7 @@ fun ProfileScreen(
         }
     )
 
+    // Scaffold of the page setup
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -135,37 +145,35 @@ fun ProfileScreen(
                 }
             )
         },
-        bottomBar = { }
+        bottomBar = { BottomNavBar(navController = navController) },
     ) { paddingValues ->
         Box(modifier =
         Modifier
             .fillMaxSize()
             .background(Color.Black)
         ) {
-            // Background box for the entire screen
+            // Background box for the entire screen look
             Box(
                 modifier = Modifier
-//                    .alpha(0.5f)
                     .padding(paddingValues)
                     .fillMaxWidth()
-                    .height(190.dp)// Use matchParentSize to cover the entire parent
+                    .height(190.dp)
                     .background(
                         Color.Black,
                         shape = RoundedCornerShape(bottomEnd = 20.dp, bottomStart = 20.dp)
                     )
             ){
-                // Background image
                 Image(
-                    painter = rememberImagePainter(R.drawable.background_profile_card),
+                    painter = rememberAsyncImagePainter(R.drawable.background_profile_card),
                     contentDescription = "Background Image",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxSize()
-                        .clip(shape = RoundedCornerShape(bottomEnd = 20.dp, bottomStart = 20.dp))
+                        .clip(shape = RoundedCornerShape(bottomEnd = 50.dp, bottomStart = 50.dp))
                 )
             }
 
-            // Content of the screen
+            // Main Content of the screen
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -174,7 +182,7 @@ fun ProfileScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
-                Spacer(modifier = Modifier.height(100.dp))
+                Spacer(modifier = Modifier.height(120.dp))
                 ProfileCard(
                     viewModel = viewModel,
                     userName = userName,
@@ -189,6 +197,7 @@ fun ProfileScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top
                 ) {
+                    // Custom composable with the profile fields such as user name and email
                     ProfileInfoFields(
                         userName = userName,
                         userEmail = userEmail,
@@ -198,13 +207,32 @@ fun ProfileScreen(
                     )
                 }
 
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ){
+                    Text("Log out", color = Color.White)
+                    IconButton(onClick = {
+                        // Log out button, with firebase log out AUTH method
+                        // Then navigating to login screen
+                        navController.navigate("login")
+                        FirebaseAuth.getInstance().signOut()
+                    }) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Sign Out", tint = Color.White)
+                    }
+                }
+
             }
         }
     }
 }
 
 
-
+/*
+ This composable creates a button in the screen that,
+ once clicked navigates to goal setup screen.
+ */
 @Composable
 fun SetGoalButton(navController: NavController) {
 
@@ -216,9 +244,11 @@ fun SetGoalButton(navController: NavController) {
         )
         IconButton(
             modifier = Modifier
+                .background(Color(0xFFFE7316), RoundedCornerShape(10.dp))
                 .border(1.dp, Color(0xFFFE7316), RoundedCornerShape(10.dp))
                 .size(50.dp),
             onClick = {
+                // navigating to goalscreen route
             navController.navigate("goalScreen")
         }) {
             Icon(imageVector = Icons.Default.Add, contentDescription = "Add Goal", Modifier.fillMaxSize(), tint = Color.White)
@@ -226,20 +256,23 @@ fun SetGoalButton(navController: NavController) {
     }
 
 
+/*
+ Composable that updates the profile picture and shows it in the UI
+ */
 @Composable
 fun ProfileCard(
-    viewModel: MainViewModel, // Assume ViewModel is passed here
+    viewModel: MainViewModel,
     userName: String,
-    onChangePictureClick: () -> Unit,
+    onChangePictureClick: () -> Unit, // lambda to handle profile picture pick update
 ) {
-    val userProfilePictureUrl by viewModel.profilePictureUrl.collectAsState()
+    val userProfilePictureUrl by viewModel.profilePictureUrl.collectAsState() // Observing profile pictureUrl and collecting as state
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
 
         ) {
 
-        // Profile Picture
+        // Profile Picture box
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -263,7 +296,7 @@ fun ProfileCard(
                     imageVector = Icons.Default.Add, contentDescription = "Add Picture", tint = Color.Black,
                 )
             }
-            // Use Coil to load the image from URL
+            // Loading the image into the container
             Image(
                 painter = rememberAsyncImagePainter(userProfilePictureUrl),
                 contentDescription = "Profile Picture",
@@ -272,7 +305,6 @@ fun ProfileCard(
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
-        // User Name
         Text(
             text = userName,
             style = MaterialTheme.typography.titleLarge,
@@ -284,39 +316,37 @@ fun ProfileCard(
     }
 }
 
-
+/*
+ Custom composable for the profile fields
+ is displays User name and user email
+ also updates the user name
+ */
 @Composable
 fun ProfileInfoFields(
     viewModel: MainViewModel,
     userName: String,
     userEmail: String,
-    context: Context, // Pass the context to show Toast messages
+    context: Context, // context to show Toast messages
     navController: NavController
 ) {
+    val fontTest = FontFamily(Font(R.font.zendots_regular))
     var editableUserName by remember { mutableStateOf(userName) }
     var isEditing by remember { mutableStateOf(false) }
 
-    // This function updates the userName and shows a Toast based on the result
-    fun saveUserName() {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-        if (userId.isNotEmpty()) {
-            viewModel.updateUserName(userId, editableUserName) { success, message ->
-                if (success) {
-                    Toast.makeText(context, "User name updated", Toast.LENGTH_SHORT).show()
-                    isEditing = false // Reset editing state
-                    editableUserName = "" // Reset the editable name
-                } else {
-                    Toast.makeText(
-                        context,
-                        "Failed to update user name: $message",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+    // Observing updateResult LiveData
+    val updateResult by viewModel.updateResult.observeAsState()
+
+    // Check for update result and show Toast accordingly
+    LaunchedEffect(updateResult) {
+        updateResult?.let { result ->
+            Toast.makeText(context, result.second, Toast.LENGTH_SHORT).show()
+            if (result.first) {
+                isEditing = false
+                editableUserName = userName // Reset the editable name if needed
             }
         }
     }
 
-    val fontTest = FontFamily(Font(R.font.zendots_regular))
     Column(
         modifier = Modifier
             .padding(20.dp)
@@ -325,6 +355,7 @@ fun ProfileInfoFields(
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         Text("Personal Information", fontFamily = fontTest, color = Color(0xFFFE7316), fontSize = 20.sp)
+        // Display user email read only
         OutlinedTextField(
             value = userEmail,
             textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
@@ -333,39 +364,36 @@ fun ProfileInfoFields(
             readOnly = true,
             modifier = Modifier.fillMaxWidth(),
             )
+
+        // display user name editable, and trailing icon execute the change
         OutlinedTextField(
-            value = editableUserName,
+            value = userName,
             textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
             onValueChange = { newName ->
                 editableUserName = newName
                 isEditing = true
             },
-            label = { Text(text = "UserName", color = Color(0xFFFE7316))},
+            label = { Text(text = "Change Your Name", color = Color(0xFFFE7316))},
             singleLine = true,
             trailingIcon = {
+                // ife editing gets the instance of the user and updates the user name
                 if (isEditing) {
-                    IconButton(onClick = { saveUserName() }) {
-                        Icon(Icons.Filled.Check, "Save")
+                    IconButton(onClick = {
+                        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+                        if (userId.isNotEmpty()) {
+                            viewModel.updateUserName(userId, editableUserName) // Call the ViewModel's update method directly
+                        }
+                    }) {
+                        Icon(Icons.Filled.Check, "Save", tint = Color.White)
                     }
                 }
             },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(20.dp))
+        // Calling setGoalButton at the end of the column
         SetGoalButton(navController = navController)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
-            verticalAlignment = Alignment.CenterVertically
-        ){
-            Text("Log out", color = Color.White)
-            IconButton(onClick = {
-                navController.navigate("login")
-                FirebaseAuth.getInstance().signOut()
-            }) {
-                Icon(imageVector = Icons.Filled.ExitToApp, contentDescription = "Sign Out", tint = Color.White)
-            }
-        }
+
 
     }
 }

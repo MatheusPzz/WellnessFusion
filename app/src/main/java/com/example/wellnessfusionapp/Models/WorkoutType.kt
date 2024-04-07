@@ -1,5 +1,5 @@
 package com.example.wellnessfusionapp.Models
 
 enum class WorkoutType {
-    PHYSICAL,ZEN
+    PHYSICAL,MENTAL
 }

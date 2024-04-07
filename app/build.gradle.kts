@@ -59,6 +59,7 @@ android {
 dependencies {
 
     implementation ("com.github.AnyChart:AnyChart-Android:1.1.5")
+    implementation ("com.github.tehras:charts:0.2.4-alpha")
     implementation ("com.google.firebase:firebase-messaging:23.4.1")
     implementation("com.exyte:animated-navigation-bar:1.0.0")
     implementation ("com.github.PhilJay:MPAndroidChart:v3.1.0")

@@ -3,6 +3,7 @@ package com.example.wellnessfusionapp
 import android.annotation.SuppressLint
 import android.util.Log
 import androidx.annotation.FontRes
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -106,7 +107,7 @@ fun HomeScreen(
     val userProfilePictureUrl by viewModel2.profilePictureUrl.collectAsState()
 
     //
-    val ProfilePainter = if (userProfilePictureUrl != null) {
+    val profilePainter = if (userProfilePictureUrl != null) {
         rememberAsyncImagePainter(model = userProfilePictureUrl)
     } else {
         painterResource(id = R.drawable.ic_launcher_foreground)
@@ -153,7 +154,7 @@ fun HomeScreen(
                                     .clickable { navController.navigate("UserProfile") }
                             ) {
                                 Image(
-                                    painter = ProfilePainter,
+                                    painter = profilePainter,
                                     contentDescription = "Profile Picture",
                                     modifier = Modifier
                                         .size(100.dp)
@@ -302,8 +303,9 @@ fun GoalsSection(navController: NavController) {
             ) {
                 Text(
                     "New Goal",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = Color.White,
+                    fontWeight = FontWeight.Bold,
                 )
                 IconButton(
                     onClick = { navController.navigate("goalScreen") }
@@ -354,7 +356,7 @@ fun ButtonMental(navController: NavController) {
                 modifier = Modifier
                     .height(120.dp)
                     // On click it goes to workout saved plans
-                    .clickable(onClick = { navController.navigate("savedWorkoutPlans") }
+                    .clickable(onClick = { navController.navigate("mentalCategory") }
                     ))
         }
         Box(
@@ -417,7 +419,7 @@ fun ButtonPhysicalHome(navController: NavController) {
                 modifier = Modifier
                     .height(120.dp)
                     // On click it goes to workout saved plans
-                    .clickable(onClick = { navController.navigate("savedWorkoutPlans") }
+                    .clickable(onClick = { navController.navigate("physicalCategory") }
                     ))
         }
         Box(
@@ -504,6 +506,13 @@ fun GoalItem(
         goal.initialValue.toFloat(),
         goal.desiredValue.toFloat()
     )
+
+
+    var isExpandedLine by remember { mutableStateOf(false) }
+    val clickModifier = Modifier.clickable { isExpandedLine = !isExpandedLine }
+
+
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -512,17 +521,15 @@ fun GoalItem(
     ) {
         Box(
             modifier = Modifier
-                .width(130.dp)
-                .height(130.dp)
-                .padding(8.dp)
+                .size(130.dp)
+                .padding(4.dp)
                 .clickable { navController.navigate("goalProgressRecord/${goal.id}") }
         ) {
             CircularProgressIndicator(
                 progress = { progress },
                 modifier = Modifier
-                    .width(130.dp)
-                    .height(130.dp),
-                color = Color(0xffFE7316),
+                    .size(130.dp),
+                color = if(goal.typeId == "Time Spent")Color(0xff1666ba) else Color(0xffFE7316),
                 strokeWidth = 9.dp,
                 trackColor = Color(0xff5c7a92),
             )
@@ -531,15 +538,19 @@ fun GoalItem(
                 contentAlignment = Alignment.Center
             ) {
                 Column(
+                    modifier = Modifier.padding(12.dp).fillMaxWidth(),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
+                        modifier = clickModifier.animateContentSize(),
+                        maxLines = if( isExpandedLine) Int.MAX_VALUE else 1,
                         text = goal.description,
                         style = MaterialTheme.typography.bodySmall,
                         textAlign = TextAlign.Center,
+                        fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xffFE7316)
+                        color = if(goal.typeId == "Time Spent")Color(0xff1666ba) else Color(0xffFE7316)
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(

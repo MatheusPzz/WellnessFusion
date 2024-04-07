@@ -11,5 +11,8 @@ data class Exercise(
     val imageUrl: String? = null,
     val isSelected : Boolean = false,
     val id : String = "",
-    val weight: String = ""
+    val weight: String = "",
+    val favorite: Boolean = false,
+    val duration: String = "",
+    val workoutType: String = ""
     )

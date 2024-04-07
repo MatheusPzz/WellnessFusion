@@ -184,7 +184,7 @@ fun SignUpButton(coroutineScope: CoroutineScope, name: String, email: String, pa
                      * If patter is matched then user is registered with the information that's inside "User",
                      * which means you will see those fields in firestore when registered.
                      */
-                    else -> registerUser(email, password, User(name = name, email = email, userId = FirebaseAuth.getInstance().currentUser?.uid ?: "", password = password), coroutineScope, context)
+                    else -> registerUser(email, password, User(name = name, email = email, userId = FirebaseAuth.getInstance().currentUser?.uid ?: "", password = password), coroutineScope, context, navController)
                 }
             }
         }, modifier = Modifier.align(Alignment.CenterHorizontally)) {
@@ -205,6 +205,7 @@ private fun registerUser(
     user: User, // Profile data is inside of it
     scope: CoroutineScope,
     context: Context,
+    navController: NavController
 ) {
     val auth = FirebaseAuth.getInstance()
     auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
@@ -216,6 +217,9 @@ private fun registerUser(
                 // Success callback
                 scope.launch {
                     context.showToast("Profile created successfully")
+                    navController.navigate("home") {
+                        popUpTo("splash") { inclusive = true }
+                    }
                 }
             }, { errMsg ->
                 // Error callback

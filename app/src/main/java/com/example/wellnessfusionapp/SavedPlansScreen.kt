@@ -80,20 +80,30 @@ import com.example.wellnessfusionapp.Navigation.BottomNavBar
 import com.example.wellnessfusionapp.ViewModels.GeneratedWorkoutViewModel
 import com.google.accompanist.pager.ExperimentalPagerApi
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+/*
+ This composable function displays a list of workout plans created by the user
+ The user can create new plans from this screen as well
+ The user can also view the details of each workout plan by clicking on the plan
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SavedWorkoutsScreen(viewModel: GeneratedWorkoutViewModel, navController: NavController) {
+fun SavedWorkoutsScreen(
+    viewModel: GeneratedWorkoutViewModel,  // Using another viewModel for this screen
+    navController: NavController  // NavController for screen navigation
+) {
 
     val textFont = FontFamily(
         Font(R.font.zendots_regular)
     )
-    val savedWorkouts by viewModel.savedWorkouts.observeAsState(listOf())
 
+    val savedWorkouts by viewModel.savedWorkouts.observeAsState(listOf()) // Observe the list of saved workout as state
+
+    // Fetching any new workouts when the screen is first launched
     LaunchedEffect(Unit) {
         viewModel.fetchSavedWorkouts()
     }
 
+    // Main content scaffold setup
     Scaffold(
         containerColor = Color(0xff383838),
         topBar = {
@@ -102,19 +112,21 @@ fun SavedWorkoutsScreen(viewModel: GeneratedWorkoutViewModel, navController: Nav
                     containerColor = Color.Black.copy(alpha = 0.7f)
                 ),
                 title = {
-                        Text(
-                            text = "Your Workout Plans",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = Color.White,
-                            textAlign = TextAlign.Center,
-                            fontFamily = textFont
-                        )
+                    Text(
+                        text = "Your Workout Plans",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                        fontFamily = textFont
+                    )
                 },
             )
         },
         bottomBar = { BottomNavBar(navController) }
 
     ) { paddingValues ->
+
+        // If there are no saved workout plans, display a message to create a new plan with the two main buttons
         if (savedWorkouts.isEmpty()) {
             Column(
                 modifier = Modifier
@@ -123,33 +135,39 @@ fun SavedWorkoutsScreen(viewModel: GeneratedWorkoutViewModel, navController: Nav
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("No saved workout plans, Create one!", style = MaterialTheme.typography.bodyMedium, color = Color.White, fontFamily = textFont)
+                Text(
+                    "No saved workout plans, Create one!",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White,
+                    fontFamily = textFont
+                )
                 Row {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            ButtonPhysical(navController)
-                            Text(
-                                "Physical",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color.White,
-                                fontFamily = textFont
-                            )
-                        }
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            MentalButton(navController)
-                            Text(
-                                "Mental",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color.White,
-                                fontFamily = textFont
-                            )
-                        }
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        ButtonPhysical(navController)
+                        Text(
+                            "Physical",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.White,
+                            fontFamily = textFont
+                        )
+                    }
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        MentalButton(navController)
+                        Text(
+                            "Mental",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.White,
+                            fontFamily = textFont
+                        )
+                    }
                 }
             }
         } else {
+            // Display the saved workout and options to create new ones at the top of the page
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -163,18 +181,18 @@ fun SavedWorkoutsScreen(viewModel: GeneratedWorkoutViewModel, navController: Nav
                     fontFamily = textFont
                 )
                 HorizontalDivider(Modifier.padding(start = 16.dp, end = 16.dp))
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                            .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
-                    ) {
-                Row (
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(10.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                ){
+                        .padding(16.dp)
+                        .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                    ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
@@ -184,7 +202,7 @@ fun SavedWorkoutsScreen(viewModel: GeneratedWorkoutViewModel, navController: Nav
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color.White,
                                 fontFamily = textFont,
-                                fontSize = 20.sp
+                                fontSize = 16.sp
                             )
                         }
                         Column(
@@ -196,11 +214,12 @@ fun SavedWorkoutsScreen(viewModel: GeneratedWorkoutViewModel, navController: Nav
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color.White,
                                 fontFamily = textFont,
-                                fontSize = 20.sp
+                                fontSize = 16.sp
                             )
                         }
                     }
                 }
+                // Display a list of all saved workouts
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -220,10 +239,12 @@ fun SavedWorkoutsScreen(viewModel: GeneratedWorkoutViewModel, navController: Nav
                         .padding(2.dp)
                         .fillMaxHeight(),
                     horizontalAlignment = Alignment.CenterHorizontally
-                    )
+                )
                 {
                     items(savedWorkouts) { workout ->
+                        // for each item a workout custom card holding information about the workout plan
                         WorkoutCard(workout, viewModel, navController)
+                        // additional user information for UX
                         Text(
                             text = "Swipe left or right to view more exercises",
                             style = MaterialTheme.typography.bodyMedium,
@@ -238,20 +259,26 @@ fun SavedWorkoutsScreen(viewModel: GeneratedWorkoutViewModel, navController: Nav
     }
 }
 
-
+/*
+ Custom composable that edits the name of a workout plan if the wrong wrongly named
+ */
 @Composable
-fun EditButton(workoutPlanId: String, currentName: String, viewModel: GeneratedWorkoutViewModel) {
-    var showDialog by remember { mutableStateOf(false) }
-    var newName by remember { mutableStateOf(currentName) }
-    val exercises by remember { mutableStateOf(emptyList<Exercise>()) }
+fun EditButton(
+    workoutPlanId: String,  // Takes the plan ID to be edited
+    currentName: String,  // Takes the current name of the plan
+    viewModel: GeneratedWorkoutViewModel // Uses the view model to update the plan name
+) {
+    var showDialog by remember { mutableStateOf(false) } // State to show the dialog
+    var newName by remember { mutableStateOf(currentName) } // State to hold the new name of the plan
 
+    // Container for edit button
     Box(
         modifier = Modifier
             .size(50.dp)
             .clip(CircleShape)
             .background(Color.DarkGray.copy(alpha = 0.9f))
     ) {
-
+        // Upon click, shows the dialog for edition
         IconButton(onClick = { showDialog = true }) {
             Icon(
                 imageVector = Icons.Default.Edit,
@@ -259,20 +286,21 @@ fun EditButton(workoutPlanId: String, currentName: String, viewModel: GeneratedW
                 tint = Color.White
             )
         }
-
+        // If dialog is true, pops the dialog
         if (showDialog) {
             AlertDialog(
-                onDismissRequest = { showDialog = false },
+                onDismissRequest = { showDialog = false }, // os dismiss, close it
                 title = { Text("Edit Workout Plan Name") },
                 text = {
                     OutlinedTextField(
-                        value = newName,
-                        onValueChange = { newName = it },
+                        value = newName,  // new name to be updated
+                        onValueChange = { newName = it },  // on change, update the new name
                         label = { Text("New Name") }
                     )
                 },
                 confirmButton = {
                     Button(onClick = {
+                        // if new name is not blank calls the update function from view model and closes the dialog
                         if (newName.isNotBlank()) {
                             viewModel.updateWorkoutPlanName(workoutPlanId, newName)
                             showDialog = false
@@ -282,7 +310,7 @@ fun EditButton(workoutPlanId: String, currentName: String, viewModel: GeneratedW
                     }
                 },
                 dismissButton = {
-                    Button(onClick = { showDialog = false }) {
+                    Button(onClick = { showDialog = false }) { // Closes the dialog on cancel button
                         Text("Cancel")
                     }
                 }
@@ -291,14 +319,23 @@ fun EditButton(workoutPlanId: String, currentName: String, viewModel: GeneratedW
     }
 }
 
+
+/*
+ If user wants to delete a workout plan,
+ this composable displays a button for it
+ */
 @Composable
-fun DeleteButton(workoutPlanId: String, viewModel: GeneratedWorkoutViewModel) {
+fun DeleteButton(
+    workoutPlanId: String,  // Takes the plan ID
+    viewModel: GeneratedWorkoutViewModel // Uses the view model to delete the plan
+) {
     Box(
         modifier = Modifier
             .size(50.dp)
             .clip(CircleShape)
             .background(Color.DarkGray.copy(alpha = 0.9f))
     ) {
+        // Upon button click calls the function from our view model that deletes the plan
         IconButton(onClick = { viewModel.deleteWorkoutPlan(workoutPlanId) }) {
             Icon(
                 imageVector = Icons.Default.Delete,
@@ -309,14 +346,24 @@ fun DeleteButton(workoutPlanId: String, viewModel: GeneratedWorkoutViewModel) {
     }
 }
 
+
+/*
+ this button takes place in a scenario that the user
+ wants to redo his plan from a previous week or day
+ he can click on it and go to a workout session page where he will see the exercises and instructions for it
+ */
 @Composable
-fun PlayButton(navController: NavController, workout: WorkoutPlan) {
+fun PlayButton(
+    navController: NavController, // Navigation controller
+    workout: WorkoutPlan // workout plan to be initiated
+) {
     Box(
         modifier = Modifier
             .size(50.dp)
             .clip(CircleShape)
             .background(Color.DarkGray.copy(alpha = 0.9f))
     ) {
+        // on click it navigates to a new page with the workout plan ID as an argument passing all the info to the other page
         IconButton(onClick = { navController.navigate("createdPlans/${workout.workoutPlanId}") }) {
             Icon(
                 imageVector = Icons.Default.PlayArrow,
@@ -328,26 +375,32 @@ fun PlayButton(navController: NavController, workout: WorkoutPlan) {
 }
 
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalPagerApi::class)
+/*
+ This composable is the UI setup for a workout plan card
+ It displays the information about a workout plan and place the buttons on it
+ for editing, deletion and execution of a plan
+ */
+@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun WorkoutCard(
-    workout: WorkoutPlan,
-    viewModel: GeneratedWorkoutViewModel,
-    navController: NavController
+    workout: WorkoutPlan, // Calls the plan from the model
+    viewModel: GeneratedWorkoutViewModel, // Uses this view model
+    navController: NavController  // navigation controller
 ) {
-    var exercisesDetails by remember { mutableStateOf<List<Exercise>>(listOf()) }
+    var exercisesDetails by remember { mutableStateOf<List<Exercise>>(listOf()) } // State for managing the list of exercises in the workout plan
 
-    var isExpanded by remember { mutableStateOf(false) }
-    val clickModifier = Modifier.clickable { isExpanded = !isExpanded }
-    val pagerState = rememberPagerState()
-    // ... your existing code ...
+    var isExpanded by remember { mutableStateOf(false) } // Expanding the line of the workout plan name
+    val clickModifier = Modifier.clickable { isExpanded = !isExpanded } // on click it animates the expansion
+    val pagerState = rememberPagerState() // State for managing the pager position
 
+    // Fetches the exercise details when the workout exercises are available and store it into out list of exercisesDetails
     LaunchedEffect(workout.exercises) {
         viewModel.fetchExercisesDetails(workout.exercises) { exercises ->
             exercisesDetails = exercises
         }
     }
 
+    // Card component setup
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -366,26 +419,24 @@ fun WorkoutCard(
             Color.Black.copy(alpha = 0.3f),
             Color.Black.copy(alpha = 0.3f),
         )
-
     ) {
         Column {
 
-            // This is where we create a horizontal pager for exercises.
+            // Horizontal pager for swiping through the exercises in the workout plan.
             HorizontalPager(
-                count = exercisesDetails.size,
-                state = pagerState,
+                count = exercisesDetails.size, // how many pages / how many exercises
+                state = pagerState, // pager state that controls which page the pager ir
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(250.dp) // Fixed height for each pager item
+                    .height(250.dp)
             ) { page ->
-
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(250.dp)
-                        .background(Color.DarkGray) // Temporary background color for visibility
+                        .background(Color.DarkGray)
                 ) {
-                    // Load exercise image here
+                    // Loads exercise image
                     AsyncImage(
                         model = exercisesDetails[page].imageUrl,
                         contentDescription = "Exercise Image",
@@ -421,6 +472,7 @@ fun WorkoutCard(
                                     .background(Color(0xffFE7316).copy(alpha = 0.6f)),
                                 contentAlignment = Alignment.Center
                             ) {
+                                // Displaying the number of exercise in the plan
                                 Text(
                                     text = exercisesDetails.size.toString(),
                                     color = Color.White,
@@ -429,7 +481,7 @@ fun WorkoutCard(
                         }
                     }
 
-                    // Exercise information overlay
+                    // Exercise information section within the card
                     Column(
                         modifier = Modifier
                             .align(Alignment.BottomStart)
@@ -451,23 +503,25 @@ fun WorkoutCard(
                                 horizontalAlignment = Alignment.Start,
                             ) {
                                 Text(
-                                    text = workout.planName,
-                                    modifier = clickModifier
-                                        .animateContentSize()
-                                        .padding(0.dp), // Apply padding for better touch area, if needed
+                                    text = workout.planName, // plan name
+                                    modifier = clickModifier  // click modifier to animate expansion of line
+                                        .animateContentSize(),
                                     style = MaterialTheme.typography.titleLarge,
                                     color = Color.White,
                                     maxLines = if (isExpanded) Int.MAX_VALUE else 1, // Use Int.MAX_VALUE for no limit when expanded
-                                    overflow = TextOverflow.Ellipsis // Add ellipsis when text is truncated
+                                    overflow = TextOverflow.Ellipsis // Add ellipsis when text occupies more than the available space
                                 )
                             }
+                            // Calling our three custom composables in a row
                             PlayButton(navController, workout)
-                            Spacer(modifier = Modifier.width(9.dp))
+                            Spacer(modifier = Modifier.width(7.dp))
                             EditButton(workout.workoutPlanId, workout.planName, viewModel)
-                            Spacer(modifier = Modifier.width(9.dp))
+                            Spacer(modifier = Modifier.width(7.dp))
                             DeleteButton(workout.workoutPlanId, viewModel)
                         }
                         Spacer(modifier = Modifier.height(10.dp))
+
+                        // Displays the name of each exercise bof each page, passing the pager state for each page
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -488,97 +542,9 @@ fun WorkoutCard(
     }
 }
 
-
-//@OptIn(ExperimentalFoundationApi::class, ExperimentalPagerApi::class)
-//@Composable
-//fun WorkoutCard(
-//    workout: WorkoutPlan,
-//    viewModel: GeneratedWorkoutViewModel,
-//    navController: NavController
-//) {
-//    var exercisesDetails by remember { mutableStateOf<List<Exercise>>(listOf()) }
-//
-//    var isExpanded by remember { mutableStateOf(false) }
-//    val clickModifier = Modifier.clickable { isExpanded = !isExpanded }
-//
-//    LaunchedEffect(workout.exercises) {
-//        viewModel.fetchExercisesDetails(workout.exercises) { exercises ->
-//            exercisesDetails = exercises
-//        }
-//    }
-//
-//    Card(
-//        modifier = Modifier
-//            .padding(16.dp)
-//    ) {
-//        Column() {
-//
-//            Row(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(8.dp),
-//                horizontalArrangement = Arrangement.SpaceBetween,
-//                verticalAlignment = Alignment.Top
-//            ) {
-//                Column(
-//                    modifier = Modifier
-//                        .width(180.dp)
-//                        .padding(8.dp),
-//                    horizontalAlignment = Alignment.CenterHorizontally
-//                ) {
-//                    Text(
-//                        text = workout.planName,
-//                        modifier = clickModifier
-//                            .animateContentSize()
-//                            .padding(0.dp), // Apply padding for better touch area, if needed
-//                        style = MaterialTheme.typography.titleLarge,
-//                        maxLines = if (isExpanded) Int.MAX_VALUE else 1, // Use Int.MAX_VALUE for no limit when expanded
-//                        overflow = TextOverflow.Ellipsis // Add ellipsis when text is truncated
-//                    )
-//                }
-//                PlayButton(navController, workout)
-//                EditButton(workout.workoutPlanId, workout.planName, viewModel)
-//                DeleteButton(workout.workoutPlanId, viewModel)
-//            }
-//            HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
-//
-//
-//            val pagerState = rememberPagerState()
-//            HorizontalPager(
-//                count = exercisesDetails.size,
-//                state = pagerState,
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//            ) { page ->
-//                val exercise = exercisesDetails[page]
-//                ExercisePage(exercise, navController)
-//            }
-//        }
-//    }
-//}
-
-@Composable
-fun ExercisePage(exercise: Exercise, navController: NavController) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top,
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-    ) {
-        AsyncImage(
-            model = exercise.imageUrl,
-            contentDescription = "Exercise Image",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .height(150.dp)
-                .fillMaxWidth()
-        )
-
-    }
-}
-
-
+/*
+ Custom composable that displays the UI of the button for physical plan creation
+ */
 @Composable
 fun ButtonPhysical(navController: NavController) {
 
@@ -588,8 +554,7 @@ fun ButtonPhysical(navController: NavController) {
     ) {
         Box(
             modifier = Modifier
-                .width(100.dp)
-                .height(100.dp)
+                .size(70.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -604,14 +569,16 @@ fun ButtonPhysical(navController: NavController) {
                 painter = painterResource(id = R.drawable.physical),
                 contentDescription = "Physical",
                 modifier = Modifier
-                    .height(120.dp) // Adjust size as needed
-                    .clickable(onClick = { navController.navigate("physicalCategory") }
+                    .height(120.dp)
+                    .clickable(onClick = { navController.navigate("physicalCategory") } //On Click navigates to physical category selection
                     ))
-
         }
     }
 }
 
+/*
+ Custom composable that displays the UI of the button for Mental plan creation
+ */
 @Composable
 fun MentalButton(navController: NavController) {
 
@@ -621,8 +588,7 @@ fun MentalButton(navController: NavController) {
     ) {
         Box(
             modifier = Modifier
-                .width(100.dp)
-                .height(100.dp)
+                .size(70.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -638,8 +604,8 @@ fun MentalButton(navController: NavController) {
                 contentDescription = "Mental",
                 modifier = Modifier
                     .height(120.dp) // Adjust size as needed
-                    .clickable(onClick = { navController.navigate("zenCategory") }
-                    ))
+                    .clickable(onClick = { navController.navigate("zenCategory") } // on click navigates to mental category selection
+            ))
         }
     }
 }
