@@ -34,8 +34,7 @@ Wellness Fusion was born out of a realization that I was not alone in grappling 
   App: Wellness Fusion
   
 - **Contact**:
-  Email: matheusperazzo2014@hotmail.com
-  Phone: +353 834052311
+
 
   
 - **APK**:
