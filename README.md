@@ -1,6 +1,8 @@
 # Wellness Fusion
 
-![Wellness Fusion Logo]![DALL·E 2024-03-29 23 00 06 - Create a logo for a fitness app, taking inspiration from the yin and yang symbol to represent balance and harmony 1]https://github.com/MatheusPzz/WellnessFusion/assets/110614194/9abc3e33-d2fe-4e3d-915d-d6f823d580bc
+![Wellness Fusion Logo]
+(![DALL·E 2024-03-29 23 00 06 - Create a logo for a fitness app, taking inspiration from the yin and yang symbol to represent balance and harmony 1](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/977392af-a51f-4b46-9c6f-cef3e5712802)
+)
 
 
 **Wellness Fusion** emerged from the understanding that the challenge of maintaining a consistent fitness routine is a universal one. This application is crafted to assist users in adhering to their fitness goals, tracking progress, and staying motivated throughout their fitness journey. By enabling users to create personalized workout plans, **Wellness Fusion** ensures that every minute spent working out, whether at home or in the gym, is optimized for maximum benefit. The goal is to keep users motivated and engaged in their pursuit of fitness.
