@@ -18,8 +18,12 @@
 
 ## Screenshots
 
-![Screenshot 1](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/acf2fc62-9b4e-44c8-be9e-0146a73e1680 "Main Interface") ![Screenshot 2](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/69a00a45-d861-4354-80ea-0cff5e7ccd18 "Workout Plan")![Screenshot 3](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/5b3296fe-1083-47a2-a4d0-7117db9217cf "Workout Log")![Screenshot 4](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/4692faca-e348-42d0-bab3-5bee9a6022bd "Progress Chart")![Screenshot 5](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/31d7c2ee-36e7-4e1b-9ecd-bfa3867740b6 "Achievements Page")![Screenshot 6](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/41b9b494-c264-4dde-82a9-c3be7c5f9e22 "Exercise Guidance")
-
+![Screenshot 1] (![Screenshot_20240408_085814](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/9340d2f4-ffd2-4cdf-83b7-5ae1a17b654f))
+![Screenshot 2] (![Screenshot_20240408_190402](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/a34c6330-55ee-418c-9f7b-1d25b1406c09))
+![Screenshot 3] (![Screenshot_20240408_190331](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/cf881886-a44b-4660-b0d2-7b17a894756f))
+![Screenshot 4] (![Screenshot_20240408_190414](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/0f9759a1-0337-46b1-907e-5127b2e6e8d2)
+)
+ 
 ## Installation
 
 To get started with **Wellness Fusion**, follow these simple steps:
