@@ -1,6 +1,5 @@
 # Wellness Fusion
-
-![Wellness Fusion Logo]
+[Wellness Fusion Logo]
 (![DALL·E 2024-03-29 23 00 06 - Create a logo for a fitness app, taking inspiration from the yin and yang symbol to represent balance and harmony 1](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/977392af-a51f-4b46-9c6f-cef3e5712802)
 )
 
