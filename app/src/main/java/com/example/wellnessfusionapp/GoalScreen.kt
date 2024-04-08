@@ -72,6 +72,11 @@ import com.google.firebase.Timestamp
 import java.util.UUID
 
 
+
+// Only two goals are working at the moment, the rest will be left for future development
+// Exercise Weight and Time Spent, exercise weight makes the user able to set a goal for a specific exercise, input current weight he is doing in the exercise and desired value to be achieved
+// Time Spent is a goal for the user to set a goal for a specific exercise, input current time spent in the exercise and desired time to be achieved
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GoalScreen(navController: NavController, viewModel: MainViewModel) {
