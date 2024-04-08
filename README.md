@@ -1,8 +1,6 @@
 # Wellness Fusion
-[Wellness Fusion Logo]
-(![DALL·E 2024-03-29 23 00 06 - Create a logo for a fitness app, taking inspiration from the yin and yang symbol to represent balance and harmony 1](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/977392af-a51f-4b46-9c6f-cef3e5712802)
-)
 
+![Wellness Fusion Logo](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/977392af-a51f-4b46-9c6f-cef3e5712802 "Wellness Fusion Logo")
 
 **Wellness Fusion** emerged from the understanding that the challenge of maintaining a consistent fitness routine is a universal one. This application is crafted to assist users in adhering to their fitness goals, tracking progress, and staying motivated throughout their fitness journey. By enabling users to create personalized workout plans, **Wellness Fusion** ensures that every minute spent working out, whether at home or in the gym, is optimized for maximum benefit. The goal is to keep users motivated and engaged in their pursuit of fitness.
 
@@ -20,23 +18,12 @@
 
 ## Screenshots
 
-![Screenshot 1](![Screenshot_20240408_085814](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/acf2fc62-9b4e-44c8-be9e-0146a73e1680)
-)
-![Screenshot 2](![Screenshot_20240408_190331](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/69a00a45-d861-4354-80ea-0cff5e7ccd18)
-)
-
-![Screenshot 3](![Screenshot_20240408_190331](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/5b3296fe-1083-47a2-a4d0-7117db9217cf)
-)
-
-![Screenshot 4](![Screenshot_20240408_190331](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/4692faca-e348-42d0-bab3-5bee9a6022bd)
-)
-
-![Screenshot 5](![Screenshot_20240408_190408](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/31d7c2ee-36e7-4e1b-9ecd-bfa3867740b6)
-)
-
-![Screenshot 6](![Screenshot_20240408_190414](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/41b9b494-c264-4dde-82a9-c3be7c5f9e22)
-)
-
+![Screenshot 1](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/acf2fc62-9b4e-44c8-be9e-0146a73e1680 "Main Interface")
+![Screenshot 2](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/69a00a45-d861-4354-80ea-0cff5e7ccd18 "Workout Plan")
+![Screenshot 3](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/5b3296fe-1083-47a2-a4d0-7117db9217cf "Workout Log")
+![Screenshot 4](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/4692faca-e348-42d0-bab3-5bee9a6022bd "Progress Chart")
+![Screenshot 5](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/31d7c2ee-36e7-4e1b-9ecd-bfa3867740b6 "Achievements Page")
+![Screenshot 6](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/41b9b494-c264-4dde-82a9-c3be7c5f9e22 "Exercise Guidance")
 
 ## Installation
 
@@ -52,7 +39,7 @@ Here's how to kickstart your **Wellness Fusion** experience:
 
 1. Create an account to get started.
 2. Pick a workout type that aligns with your fitness goals.
-3. Select your desired workout categories
+3. Select your desired workout categories.
 4. Choose the exercises you want to include in your plan.
 5. Execute your plan and log your sets to track progress.
 6. After setting a goal for an exercise, monitor your progress with each log entry.
