@@ -15,8 +15,12 @@ Wellness Fusion was born out of a realization that I was not alone in grappling 
 - **Screenshots**:
 
 
+- **Installation**:
+  1 - Clone the repository
+  2 - Open the project in Android Studio
+  3 - Run the project on an emulator or physical device
   
-- **Getting Started and Installation**:
+- **Getting Started**:
   1 - Create an account.
   2 - Pick a workout type.
   3 - Select your categories.
