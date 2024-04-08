@@ -11,11 +11,13 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -155,7 +157,7 @@ fun ImageSlider() {
             .height(480.dp)
             .fillMaxWidth()
     ) {
-        val pagerState = rememberPagerState(pageCount = { 3 })
+        val pagerState = rememberPagerState(pageCount = {3})
         val loginSlider = listOf(
             R.drawable.background_physical,
             R.drawable.background_slider2,
@@ -210,11 +212,26 @@ fun ImageSlider() {
         }
         LogoIcon() // Assuming LogoIcon is another composable you've defined
 
-        // Overlay Text (Optional, adjust based on your needs)
-
+        // Adding pager counter indicators
+        Row(
+            Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            repeat(pagerState.pageCount) { index ->
+                val color = if (pagerState.currentPage == index) Color.DarkGray else Color.LightGray
+                Box(
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .clip(CircleShape)
+                        .background(color)
+                        .size(12.dp)
+                )
+            }
+        }
     }
 }
-
 
 
 /*This is where the user input his email and password, the composable has straight forward structure and fields*/
