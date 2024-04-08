@@ -33,6 +33,10 @@ To get started with **Wellness Fusion**, follow these simple steps:
 2. Open the project in Android Studio.
 3. Run the project on an emulator or a physical device to begin your wellness journey.
 
+Mock user with everything set to see whole app when everything is set:
+Email: example@gmail.com
+Password: 123456
+
 ## Getting Started
 
 Here's how to kickstart your **Wellness Fusion** experience:
@@ -52,7 +56,6 @@ Here's how to kickstart your **Wellness Fusion** experience:
 
 ## Contact
 
-_Fill in your contact information here for users to reach out with questions or feedback._
 
 ## APK
 
