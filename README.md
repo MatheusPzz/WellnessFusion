@@ -18,12 +18,7 @@
 
 ## Screenshots
 
-![Screenshot 1](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/acf2fc62-9b4e-44c8-be9e-0146a73e1680 "Main Interface")
-![Screenshot 2](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/69a00a45-d861-4354-80ea-0cff5e7ccd18 "Workout Plan")
-![Screenshot 3](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/5b3296fe-1083-47a2-a4d0-7117db9217cf "Workout Log")
-![Screenshot 4](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/4692faca-e348-42d0-bab3-5bee9a6022bd "Progress Chart")
-![Screenshot 5](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/31d7c2ee-36e7-4e1b-9ecd-bfa3867740b6 "Achievements Page")
-![Screenshot 6](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/41b9b494-c264-4dde-82a9-c3be7c5f9e22 "Exercise Guidance")
+![Screenshot 1](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/acf2fc62-9b4e-44c8-be9e-0146a73e1680 "Main Interface") ![Screenshot 2](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/69a00a45-d861-4354-80ea-0cff5e7ccd18 "Workout Plan")![Screenshot 3](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/5b3296fe-1083-47a2-a4d0-7117db9217cf "Workout Log")![Screenshot 4](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/4692faca-e348-42d0-bab3-5bee9a6022bd "Progress Chart")![Screenshot 5](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/31d7c2ee-36e7-4e1b-9ecd-bfa3867740b6 "Achievements Page")![Screenshot 6](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/41b9b494-c264-4dde-82a9-c3be7c5f9e22 "Exercise Guidance")
 
 ## Installation
 
