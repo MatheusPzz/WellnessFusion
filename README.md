@@ -18,7 +18,7 @@
 
 ## Screenshots
 
-![Screenshot 1] (https://github.com/MatheusPzz/WellnessFusion/assets/110614194/618557fc-d59e-4726-aed1-5e11d7388c0d)
+![Screenshot_20240408_190414 (1)](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/f3a2d392-41d4-41da-85b5-6fb3b3ca6c18)
 )
 ![Screenshot 2] (![Screenshot_20240408_190402](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/a34c6330-55ee-418c-9f7b-1d25b1406c09))
 ![Screenshot 3] (![Screenshot_20240408_190331](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/cf881886-a44b-4660-b0d2-7b17a894756f))
