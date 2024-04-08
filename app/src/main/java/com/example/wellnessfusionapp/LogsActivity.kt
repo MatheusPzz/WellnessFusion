@@ -514,6 +514,10 @@ fun SelectWorkoutPlanDialog(
     }
 }
 
+// In this composable i was trying to implement a user weekly activity, showing the days that the user most engaged in his fitness journey
+// but i was not able to finish it, i was trying to use the MPAndroidChart library to implement the bar chart, but i was not able to finish it
+// i will leave the code here for future implementation
+
 //@Composable
 //fun WeeklyWorkoutBarChart(
 //    weeklyWorkoutCounts: List<MainViewModel.DailyWorkoutCount>,
