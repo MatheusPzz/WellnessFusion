@@ -18,12 +18,12 @@
 
 ## Screenshots
 
-![Screenshot_20240408_190414 (1)](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/f3a2d392-41d4-41da-85b5-6fb3b3ca6c18)       ![Screenshot_20240408_190414 (1)](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/f3a2d392-41d4-41da-85b5-6fb3b3ca6c18)
+![Screenshot_20240408_190414 (1)](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/f3a2d392-41d4-41da-85b5-6fb3b3ca6c18)
+![Screenshot_20240408_085814 (1)](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/3e5b242d-8ad2-4187-b6fd-4d31a5676f19)
+![Screenshot_20240408_190402 (1)](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/0837efab-5fdd-460f-9cb7-60e7c8ba6d38)
+![Screenshot_20240408_190408](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/958ebcb0-c939-428f-afde-ec85ccf55f94)
+![Screenshot_20240408_190408](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/3bd8546d-893f-44cd-b00a-bd375a5318b4)
 
-![Screenshot 2] (![Screenshot_20240408_190402](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/a34c6330-55ee-418c-9f7b-1d25b1406c09))
-![Screenshot 3] (![Screenshot_20240408_190331](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/cf881886-a44b-4660-b0d2-7b17a894756f))
-![Screenshot 4] (![Screenshot_20240408_190414](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/0f9759a1-0337-46b1-907e-5127b2e6e8d2)
-)
  
 ## Installation
 
