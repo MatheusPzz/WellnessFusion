@@ -52,7 +52,7 @@ Here's how to kickstart your **Wellness Fusion** experience:
 
 1. Create an account to get started.
 2. Pick a workout type that aligns with your fitness goals.
-3. Select your desired workout categories.
+3. Select your desired workout categories
 4. Choose the exercises you want to include in your plan.
 5. Execute your plan and log your sets to track progress.
 6. After setting a goal for an exercise, monitor your progress with each log entry.
