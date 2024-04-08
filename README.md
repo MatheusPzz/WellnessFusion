@@ -20,9 +20,23 @@
 
 ## Screenshots
 
-![Screenshot 1](#screenshot-placeholder-1)
-![Screenshot 2](#screenshot-placeholder-2)
-_More screenshots will give users a visual understanding of how the app works and looks._
+![Screenshot 1](![Screenshot_20240408_085814](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/acf2fc62-9b4e-44c8-be9e-0146a73e1680)
+)
+![Screenshot 2](![Screenshot_20240408_190331](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/69a00a45-d861-4354-80ea-0cff5e7ccd18)
+)
+
+![Screenshot 3](![Screenshot_20240408_190331](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/5b3296fe-1083-47a2-a4d0-7117db9217cf)
+)
+
+![Screenshot 4](![Screenshot_20240408_190331](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/4692faca-e348-42d0-bab3-5bee9a6022bd)
+)
+
+![Screenshot 5](![Screenshot_20240408_190408](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/31d7c2ee-36e7-4e1b-9ecd-bfa3867740b6)
+)
+
+![Screenshot 6](![Screenshot_20240408_190414](https://github.com/MatheusPzz/WellnessFusion/assets/110614194/41b9b494-c264-4dde-82a9-c3be7c5f9e22)
+)
+
 
 ## Installation
 
